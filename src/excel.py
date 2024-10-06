@@ -1,24 +1,24 @@
 import pandas as pd
 
-# Ruta al archivo Excel (ajusta según la ubicación de tu archivo)
+#poner la ruta del archivo
 file_path = 'C:\\Users\\Lucia\\Downloads\\housing.xlsx'
 
 def cargar_datos_excel(file_path):
     try:
-        # Intentar cargar el archivo Excel
+        # Intenta cargar el archivo Excel
         data = pd.read_excel(file_path, sheet_name=None)  # Carga todas las hojas
         print(f"Archivo '{file_path}' cargado exitosamente.")
         
-        # Verificar si hay hojas en el archivo
+        # Verifica si hay hojas en el archivo
         if not data:
             print("La tabla no existe o el archivo está vacío.")
             return
 
-        # Si el archivo tiene múltiples hojas, seleccionar la primera por defecto
+        # Si el archivo tiene múltiples hojas, selecciona la primera por defecto
         first_sheet_name = list(data.keys())[0]
         df = data[first_sheet_name]
 
-        # Mostrar las primeras filas del DataFrame
+        # Muestra las primeras filas del DataFrame
         print(f"Mostrando las primeras filas de la hoja: {first_sheet_name}")
         print(df.head())
 
@@ -29,5 +29,4 @@ def cargar_datos_excel(file_path):
     except Exception as e:
         print(f"Ocurrió un error al cargar el archivo: {e}")
 
-# Llamar a la función para cargar y mostrar los datos
 cargar_datos_excel(file_path)
