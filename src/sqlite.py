@@ -1,4 +1,3 @@
-import pandas as pd
 import sqlite3 as sq
 
 
@@ -11,25 +10,14 @@ def read_files():
         if not file.lower().endswith(".db"): #Checks if the file is in the valid format
             print("ERROR: Invalid format.\n")
             return
-        try:
-            open(file) #Checks if it exists
-        except:
-            print("ERROR: File not found.\n")
-            return
-        
+
         conn = sq.connect(file)
-
-        # write the data frame to the db
-
-        conn.commit()
-
-        # read back from the database
-        print(pd.read_sql(f'select * from {file[:-3]}', conn))
-
-        conn.close()
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        for table in c.fetchall():
+            yield list(c.execute('SELECT * from ?;', (table[0],)))
         
         print("File read succesfully.\n")
 
 
-if __name__ == "__main__":
-    read_files()
+read_files()
