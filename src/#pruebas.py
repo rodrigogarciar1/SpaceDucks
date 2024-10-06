@@ -1,14 +1,21 @@
 import pandas as pd
+import os
 
-def importar_datos_excel():
+def importar_datos_excel(ruta_archivo):
     try:
-        # Ruta al archivo Excel (ajustada correctamente)
-        ruta_archivo = r"C:\Users\Lucia\Downloads\housing.xlsx"  # Ajusta según las opciones 1, 2 o 3
-        
-        # Cargar datos de Excel
-        datos = pd.read_excel(ruta_archivo)
-        
-        # Mostrar las primeras filas de los datos cargados
+        # Verificar que el archivo existe
+        if not os.path.isfile(ruta_archivo):
+            raise FileNotFoundError(f"Archivo no encontrado: {ruta_archivo}")
+
+        # Verificar que el archivo tiene una extensión válida de Excel
+        extension = os.path.splitext(ruta_archivo)[1].lower()
+        if extension not in [".xlsx", ".xls"]:
+            raise ValueError("Formato de archivo no soportado. Por favor, proporciona un archivo de Excel (.xlsx, .xls).")
+
+        # Cargar datos de Excel de forma eficiente
+        datos = pd.read_excel(ruta_archivo, engine='openpyxl')
+
+        # Mostrar las primeras filas de los datos cargados para confirmación
         print("Las primeras filas de los datos cargados:")
         print(datos.head())
 
@@ -23,6 +30,9 @@ def importar_datos_excel():
 
 # Ejecutar la función para importar datos
 if __name__ == "__main__":
-    importar_datos_excel()
+    # Ajusta la ruta según la ubicación de tu archivo Excel
+    ruta_archivo = "C:\Users\Lucia\Downloads\housing.xlsx"
+    importar_datos_excel(ruta_archivo)
+
 
 
