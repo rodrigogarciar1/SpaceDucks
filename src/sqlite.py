@@ -29,4 +29,7 @@ def read_files():
         conn.close()
         
         print("File read succesfully.\n")
-        del catalog; del lines; del parts
+
+
+if __name__ == "__main__":
+    read_files()
