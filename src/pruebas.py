@@ -31,8 +31,9 @@ def importar_datos_excel(ruta_archivo):
 # Ejecutar la función para importar datos
 if __name__ == "__main__":
     # Ajusta la ruta según la ubicación de tu archivo Excel
-    ruta_archivo = "C:\Users\Lucia\Downloads\housing.xlsx"
+    ruta_archivo = r"C:\Users\Lucia\Downloads\housing.xlsx"  
     importar_datos_excel(ruta_archivo)
+
 
 
 
