@@ -1,5 +1,6 @@
 import sys
-class ProcesadorCSV:
+
+class ProcesadorCSV():
     def __init__(self, archivo_csv):
         """
         Separa el archivo en lineas, obtiene la primera fila y crea una variable para almacenar los datos tras ser procesados
@@ -7,7 +8,6 @@ class ProcesadorCSV:
         self.lineas = archivo_csv.split("\n")
         self.caracteristicas = self.lineas[0]
         self.matriz_procesada=[]
-        return None
     
     def is_float(self,text:str):
         """
@@ -54,6 +54,8 @@ class ProcesadorCSV:
 if __name__ == "__main__":
     with open(sys.argv[1]) as f: #pruebas de la clase ProcesadorCSV
         CSV_Doc = f.read()
+
+        print(CSV_Doc[:5])
         a = ProcesadorCSV(CSV_Doc)
         print(a.procesar_csv())
 

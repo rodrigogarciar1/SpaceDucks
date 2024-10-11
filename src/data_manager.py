@@ -2,6 +2,7 @@ import sqlite3 as sq
 import pandas as pd
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
+from csv_reader import ProcesadorCSV
 
 
 class DataManager():
@@ -42,21 +43,17 @@ class DataManager():
         print(self.data.head())
 
     def read_csv(self, file):
-        data = pd.read_csv(file)  # Carga todas las hojas
-        print(f"Archivo '{file}' cargado exitosamente.")
-
-        # Verifica si hay hojas en el archivo
-        if data.empty:
-            print("La tabla no existe o el archivo está vacío.")
-            return
-
-        # Si el archivo tiene múltiples hojas, selecciona la primera por defecto
-        first_sheet_name = list(data.keys())[0]
-        self.data = data[first_sheet_name]
+        a = open(file)
+        csv_data = ProcesadorCSV(a.read())
+        csv_data.procesar_csv()
+        self.data = pd.DataFrame(
+            csv_data.matriz_procesada[1:], columns=csv_data.matriz_procesada[0])
 
         # Muestra las primeras filas del DataFrame
-        print(f"Mostrando las primeras filas de la hoja: {first_sheet_name}")
-        print(self.data)
+        print(f"Mostrando las primeras filas de la hoja:")
+        print(self.data.head())
+
+        del csv_data
 
     def read_db(self, file):
         # Conexión a la base de datos SQLite
