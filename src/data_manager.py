@@ -14,13 +14,13 @@ class DataManager():
 
         fn = askopenfilename()
 
-        if fn.endswith('.xlsx'):
+        if fn.endswith('.xlsx') or fn.endswith('.xls'):
             self.read_xlsx(fn)
 
         elif fn.endswith('.csv'):
             self.read_csv(fn)
 
-        elif fn.endswith('.db'):
+        elif fn.endswith('.db') or fn.endswith('.sqlite'):
             self.read_db(fn)
         else:
             raise ValueError('The chosen file has an invalid extension.')
