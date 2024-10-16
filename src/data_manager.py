@@ -1,20 +1,17 @@
 import sqlite3 as sq
 import pandas as pd
-import tkinter as tk
-from tkinter.filedialog import askopenfilename
 from csv_reader import ProcesadorCSV
 
 
 class DataManager():
     def __init__(self) -> None:
-        data = pd.DataFrame()
+        self.data = pd.DataFrame()
 
-    def read(self):
-        tk.Tk().withdraw()  # part of the import if you are not using other tkinter functions
-
-        fn = askopenfilename()
-
-        if fn.endswith('.xlsx') or fn.endswith('.xls'):
+    def read(self, fn):
+        
+        if fn is None:
+            return None
+        elif fn.endswith('.xlsx') or fn.endswith('.xls'):
             self.read_xlsx(fn)
 
         elif fn.endswith('.csv'):
@@ -22,21 +19,19 @@ class DataManager():
 
         elif fn.endswith('.db') or fn.endswith('.sqlite'):
             self.read_db(fn)
-        else:
-            raise ValueError('The chosen file has an invalid extension.')
 
     def read_xlsx(self, file):
-        data = pd.read_excel(file, sheet_name=None)  # Carga todas las hojas
+        self.data = pd.read_excel(file, sheet_name=None)  # Carga todas las hojas
         print(f"Archivo '{file}' cargado exitosamente.")
 
         # Verifica si hay hojas en el archivo
-        if not data:
+        if not self.data:
             print("La tabla no existe o el archivo está vacío.")
             return
 
         # Si el archivo tiene múltiples hojas, selecciona la primera por defecto
-        first_sheet_name = list(data.keys())[0]
-        self.data = data[first_sheet_name]
+        first_sheet_name = list(self.data.keys())[0]
+        self.data = self.data[first_sheet_name]
 
         # Muestra las primeras filas del DataFrame
         print(f"Mostrando las primeras filas de la hoja: {first_sheet_name}")
