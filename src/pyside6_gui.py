@@ -18,7 +18,7 @@ class MainWindow(ps.QMainWindow):
         layout.addWidget(self._button)
 
         self._text_box = ps.QLabel("")
-        self._text_box.setStyleSheet("background-color: gray; color: blue; max-height: 25px; max-width: 200px; padding: 5px")
+        self._text_box.setStyleSheet("background-color: gray; color: blue; max-height: 25px; max-width: 600px; padding: 5px")
         layout.addWidget(self._text_box)
 
         central_widget = ps.QWidget()
@@ -29,7 +29,7 @@ class MainWindow(ps.QMainWindow):
 
     def add_file(self):
         self._file_name, fodder = ps.QFileDialog.getOpenFileName(self, str("Open File"),filter= str("Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)"))
-        self._text_box.setText(self._file_name.split('/')[-1])
+        self._text_box.setText(self._file_name)
 
         del fodder
 
