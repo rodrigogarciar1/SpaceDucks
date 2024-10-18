@@ -20,7 +20,7 @@ class MainWindow(ps.QMainWindow):
         self._text_box = ps.QLabel("")
         self._text_box.setStyleSheet("background-color: gray; color: blue; max-height: 25px; max-width: 600px; padding: 5px")
         layout.addWidget(self._text_box)
-
+        
         central_widget = ps.QWidget()
         central_widget.setLayout(layout)
 
