@@ -25,16 +25,37 @@ class MainWindow(ps.QMainWindow):
         self.b2.clicked.connect(self.data_reader)
         layout.addWidget(self.b2)
 
-        # Botón para eliminar archivo
-        self.b3 = ps.QPushButton(text="Eliminar archivo")
-        self.b3.clicked.connect(self.clear_data)
-        layout.addWidget(self.b3)
-
+        layout_h = ps.QHBoxLayout()
         # Label para mostrar el nombre del archivo seleccionado
         self._text_box = ps.QLabel("")
         self._text_box.setStyleSheet("background-color: gray; color: blue; max-height: 25px; max-width: 600px; padding: 5px")
-        layout.addWidget(self._text_box)
+        layout_h.addWidget(self._text_box)
+        # Botón para eliminar archivo
+        self.b3 = ps.QPushButton(text="Eliminar archivo")
+        self.b3.clicked.connect(self.clear_data)
+        layout_h.addWidget(self.b3)
+        layout.addLayout(layout_h)
 
+
+        linear_menu = ps.QHBoxLayout()
+
+        self._entry_column = ps.QComboBox()
+        self._entry_column.setStyleSheet("display = inline-box")
+        self._entry_column.hide()
+        linear_menu.addWidget(self._entry_column)
+
+        self._target_column = ps.QComboBox()
+        self._target_column.setStyleSheet("display = inline-box")
+        self._target_column.hide()
+        linear_menu.addWidget(self._target_column)
+
+        self._accept_button = ps.QPushButton(text="Procesar")
+        self._accept_button.setStyleSheet("display = inline-box")
+        self._accept_button.hide()
+        self._accept_button.clicked.connect(self.process_data)
+        linear_menu.addWidget(self._accept_button)
+
+        layout.addLayout(linear_menu)
         # QTextEdit para mostrar los datos del DataFrame
         self._text_edit = ps.QTextEdit()
         self._text_edit.setReadOnly(True)  # Hacerlo de solo lectura
@@ -52,6 +73,7 @@ class MainWindow(ps.QMainWindow):
         if self._file_name:
             self._manager.read(self._file_name)  # Leer el archivo usando DataManager
             self.show_data(self._manager.data)  # Mostrar datos en QTextEdit
+            self.set_dropdown_content(self._manager.data.keys())
         else:
             print("No se ha seleccionado ningún archivo.")
             ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
@@ -63,7 +85,7 @@ class MainWindow(ps.QMainWindow):
             self._text_edit.setPlainText(data.to_string(index=False))  # Mostrar el DataFrame como texto
         else:
             self._text_edit.setPlainText("No hay datos para mostrar.")
-            
+    
 
     #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
     def clear_data(self):
@@ -73,7 +95,27 @@ class MainWindow(ps.QMainWindow):
 
             self._text_box.clear()
             self._text_edit.clear()
-            self._file_name == None
+            self._file_name = None
+
+            self._entry_column.hide()
+            self._entry_column.clear()
+            self._target_column.hide()
+            self._target_column.clear()
+            self._accept_button.hide()
+
+    def set_dropdown_content(self, contents):
+        self._entry_column.addItems(contents)
+        self._target_column.addItems(contents)
+
+        self._entry_column.show()
+        self._target_column.show()
+        self._accept_button.show()
+
+    def process_data(self):
+        if self._entry_column.currentIndex() == self._target_column.currentIndex():
+            ps.QMessageBox.warning(self, "Error", "La columnas no pueden ser la misma")
+        if (self._entry_column.currentIndex() or self._target_column.currentIndex()) == -1:
+            ps.QMessageBox.warning(self, "Error", "Selecciona valores válidos")
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
