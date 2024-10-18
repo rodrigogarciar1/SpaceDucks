@@ -1,18 +1,13 @@
 import sqlite3 as sq
 import pandas as pd
-import tkinter as tk
-from tkinter.filedialog import askopenfilename
 from csv_reader import ProcesadorCSV
 
 
 class DataManager():
     def __init__(self) -> None:
-        data = pd.DataFrame()
+        self.data = pd.DataFrame()
 
-    def read(self):
-        tk.Tk().withdraw()  # part of the import if you are not using other tkinter functions
-
-        fn = askopenfilename()
+    def read(self, fn):
 
         if fn.endswith('.xlsx') or fn.endswith('.xls'):
             self.read_xlsx(fn)
@@ -40,7 +35,7 @@ class DataManager():
 
         # Muestra las primeras filas del DataFrame
         print(f"Mostrando las primeras filas de la hoja: {first_sheet_name}")
-        print(self.data.head())
+        print(self._data.head())
 
     def read_csv(self, file):
         a = open(file)
