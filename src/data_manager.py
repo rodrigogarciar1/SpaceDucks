@@ -32,11 +32,7 @@ class DataManager():
         # Si el archivo tiene múltiples hojas, selecciona la primera por defecto
         first_sheet_name = list(data.keys())[0]
         self.data = data[first_sheet_name]
-
-        # Muestra las primeras filas del DataFrame
-        print(f"Mostrando las primeras filas de la hoja: {first_sheet_name}")
-        print(self._data.head())
-
+        
     def read_csv(self, file):
         a = open(file)
         csv_data = ProcesadorCSV(a.read())

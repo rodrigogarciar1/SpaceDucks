@@ -16,7 +16,7 @@ class MainWindow(ps.QMainWindow):
         layout = ps.QVBoxLayout()
 
         # Botón para seleccionar archivo
-        self.b1 = ps.QPushButton(text="Ver archivos")
+        self.b1 = ps.QPushButton(text="Añadir archivos")
         self.b1.clicked.connect(self.add_file)
         layout.addWidget(self.b1)
 
@@ -37,18 +37,21 @@ class MainWindow(ps.QMainWindow):
         layout.addLayout(layout_h)
 
 
-        linear_menu = ps.QHBoxLayout()
+        linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
 
-        self._entry_column = ps.QComboBox()
+        #Dropdown para la selección de la columna de datos
+        self._entry_column = ps.QComboBox() 
         self._entry_column.setStyleSheet("display = inline-box")
-        self._entry_column.hide()
+        self._entry_column.hide() #La esconde de la vista para evitar acciones indevidas
         linear_menu.addWidget(self._entry_column)
 
+        #Dropdown para la selección de la columa objetivo
         self._target_column = ps.QComboBox()
         self._target_column.setStyleSheet("display = inline-box")
         self._target_column.hide()
         linear_menu.addWidget(self._target_column)
 
+        #Botón para procesar el modelo de regresión lineal
         self._accept_button = ps.QPushButton(text="Procesar")
         self._accept_button.setStyleSheet("display = inline-box")
         self._accept_button.hide()
@@ -73,7 +76,7 @@ class MainWindow(ps.QMainWindow):
         if self._file_name:
             self._manager.read(self._file_name)  # Leer el archivo usando DataManager
             self.show_data(self._manager.data)  # Mostrar datos en QTextEdit
-            self.set_dropdown_content(self._manager.data.keys())
+            self.set_dropdown_content(self._manager.data.keys()) #Añade los nombres de las columnas a los dropdowns
         else:
             print("No se ha seleccionado ningún archivo.")
             ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
@@ -97,16 +100,17 @@ class MainWindow(ps.QMainWindow):
             self._text_edit.clear()
             self._file_name = None
 
-            self._entry_column.hide()
+            self._entry_column.hide() 
             self._entry_column.clear()
             self._target_column.hide()
             self._target_column.clear()
             self._accept_button.hide()
 
     def set_dropdown_content(self, contents):
-        self._entry_column.addItems(contents)
+        self._entry_column.addItems(contents) #Cambia el contenido de los dropdowns
         self._target_column.addItems(contents)
 
+        #Hace los dropdows y el botón visibles
         self._entry_column.show()
         self._target_column.show()
         self._accept_button.show()
