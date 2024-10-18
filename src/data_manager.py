@@ -35,7 +35,7 @@ class DataManager():
 
         # Muestra las primeras filas del DataFrame
         print(f"Mostrando las primeras filas de la hoja: {first_sheet_name}")
-        print(self._data.head())
+        print(self.data.head())
 
     def read_csv(self, file):
         a = open(file)

@@ -70,13 +70,35 @@ class MainWindow(ps.QMainWindow):
         self._text_box.setText(self._file_name)
 
     def data_reader(self):
-        if self._file_name:
-            self._manager.read(self._file_name)  # Leer el archivo usando DataManager
-            self.show_data(self._manager.data)  # Mostrar datos en QTextEdit
-            self.set_dropdown_content(self._manager.data.keys())
-        else:
-            print("No se ha seleccionado ningún archivo.")
-            ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
+        try:
+            if self._file_name:
+                self._manager.read(self._file_name)  # Leer el archivo usando DataManager
+
+            # Verificar si el DataFrame está vacío
+                if self._manager.data.empty:
+                    ps.QMessageBox.warning(self, "Error", "El archivo está vacío o no tiene datos.")
+                    self.clear_data()  # Limpiar datos en caso de archivo vacío
+                    return
+            
+                self.show_data(self._manager.data)  # Mostrar datos en QTextEdit
+                self.set_dropdown_content(self._manager.data.keys())
+            else:
+                print("No se ha seleccionado ningún archivo.")
+                ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
+        except IndexError:
+            ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
+        except FileNotFoundError:
+            ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
+        except PermissionError:
+            ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
+        except ValueError:
+            ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
+        except UnicodeDecodeError:
+            ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
+        except MemoryError:
+            ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
+        except Exception as e:
+            ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
 
     def show_data(self, data):
         """Muestra el DataFrame en el QTextEdit."""
