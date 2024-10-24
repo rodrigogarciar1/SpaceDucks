@@ -137,11 +137,38 @@ class MainWindow(ps.QMainWindow):
         self._target_column.show()
         self._accept_button.show()
 
+    def pre_data(self):
+        
+        pass
     def process_data(self):
+
         if self._entry_column.currentIndex() == self._target_column.currentIndex():
             ps.QMessageBox.warning(self, "Error", "La columnas no pueden ser la misma")
         if (self._entry_column.currentIndex() or self._target_column.currentIndex()) == -1:
             ps.QMessageBox.warning(self, "Error", "Selecciona valores válidos")
+
+        
+        entry_column = self._entry_column.currentText() #Obtener los nombres de las columnas seleccionadas
+        target_column = self._target_column.currentText()
+
+        entry_nan_count = self._manager.data[entry_column].isna().sum() #Detectar valores inexistentes (NaN) en las columnas seleccionadas
+
+        target_nan_count = self._manager.data[target_column].isna().sum()
+
+        message = ""  # Crear un mensaje para mostrar la información
+
+        if entry_nan_count > 0:
+            message += f"La columna de entrada '{entry_column}' tiene {entry_nan_count} valores inexistentes.\n"
+        if target_nan_count > 0:
+            message += f"La columna objetivo '{target_column}' tiene {target_nan_count} valores inexistentes.\n"
+
+        # Si faltan datos mostrar advertencia al usuario
+        if message:
+            ps.QMessageBox.warning(self, "Valores Inexistentes", message)
+        else:
+            ps.QMessageBox.information(self, "Datos Validados", "No se encontraron valores inexistentes en las columnas seleccionadas.")
+
+
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
