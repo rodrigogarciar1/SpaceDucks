@@ -26,29 +26,33 @@ class MainWindow(ps.QMainWindow):
         layout.addWidget(self.b2)
 
         layout_h = ps.QHBoxLayout()
+        
         # Label para mostrar el nombre del archivo seleccionado
         self._text_box = ps.QLabel("")
         self._text_box.setStyleSheet("background-color: gray; color: blue; max-height: 25px; max-width: 600px; padding: 5px")
         layout_h.addWidget(self._text_box)
+
         # Botón para eliminar archivo
         self.b3 = ps.QPushButton(text="Eliminar archivo")
         self.b3.clicked.connect(self.clear_data)
         layout_h.addWidget(self.b3)
         layout.addLayout(layout_h)
 
+            # Tabla para mostrar los datos del DataFrame
+        self._table_widget = ps.QTableWidget()
+        layout.addWidget(self._table_widget)
 
         linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
 
-        #Dropdown para la selección de la columna de datos
-        self._entry_column = ps.QComboBox() 
-        self._entry_column.setStyleSheet("display = inline-box")
-        self._entry_column.hide() #La esconde de la vista para evitar acciones indevidas
+        # Dropdown para la selección de la columna de datos
+        self._entry_column = ps.QComboBox()
+        self._entry_column.hide()  # Ocultar inicialmente
         linear_menu.addWidget(self._entry_column)
 
-        #Dropdown para la selección de la columa objetivo
+        # Dropdown para la selección de la columna objetivo
         self._target_column = ps.QComboBox()
-        self._target_column.setStyleSheet("display = inline-box")
         self._target_column.hide()
+        
         linear_menu.addWidget(self._target_column)
 
         #Botón para procesar el modelo de regresión lineal
@@ -68,22 +72,87 @@ class MainWindow(ps.QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
+        # Opciones de manejo de valores inexistentes
+        missing_data_menu = ps.QHBoxLayout()
+
+        self._missing_options = ps.QComboBox()
+        self._missing_options.addItems(["Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
+        self._missing_options.currentIndexChanged.connect(self.missing_option_changed)
+        self._missing_options.setEnabled(False)  # Deshabilitado inicialmente
+
+        missing_data_menu.addWidget(self._missing_options)
+
+        self._constant_value_input = ps.QLineEdit()
+        self._constant_value_input.setPlaceholderText("Introduce un valor")
+        self._constant_value_input.hide()  # Escondido inicialmente, solo aparece si se selecciona "Rellenar con valor constante"
+        missing_data_menu.addWidget(self._constant_value_input)
+
+        self._apply_button = ps.QPushButton("Aplicar")
+        self._apply_button.setEnabled(False)  # Deshabilitado inicialmente
+        self._apply_button.clicked.connect(self.apply_missing_data_strategy)
+        missing_data_menu.addWidget(self._apply_button)
+
+        layout.addLayout(missing_data_menu)
+
+        central_widget = ps.QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+    def missing_option_changed(self):
+        """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
+        if self._missing_options.currentText() == "Rellenar con valor constante":
+            self._constant_value_input.show()
+        else:
+            self._constant_value_input.hide()
+
+
+            
+
+    def apply_missing_data_strategy(self):
+        """Aplica la estrategia seleccionada para manejar los valores inexistentes."""
+        strategy = self._missing_options.currentText()
+
+        if self._manager.data is None:
+            ps.QMessageBox.warning(self, "Error", "No hay datos cargados para procesar.")
+            return
+
+        if strategy == "Eliminar filas":
+            self._manager.data.dropna(inplace=True)
+        elif strategy == "Rellenar con media":
+            self._manager.data.fillna(self._manager.data.mean(), inplace=True)
+        elif strategy == "Rellenar con mediana":
+            self._manager.data.fillna(self._manager.data.median(), inplace=True)
+        elif strategy == "Rellenar con valor constante":
+            constant_value = self._constant_value_input.text()
+            if constant_value == "":
+                ps.QMessageBox.warning(self, "Error", "Por favor, introduce un valor constante.")
+                return
+            try:
+                constant_value = float(constant_value)  # Intentar convertir a número
+            except ValueError:
+                ps.QMessageBox.warning(self, "Error", "El valor constante debe ser un número.")
+                return
+            self._manager.data.fillna(constant_value, inplace=True)
+
+        # Actualizar la visualización de datos después de aplicar la estrategia
+        self.show_data(self._manager.data)
+
     def add_file(self):
         self._file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
         self._text_box.setText(self._file_name)
 
     def data_reader(self):
-        try: #gestion de errores
+        try: #Gestión de errores
             if self._file_name:
-                self._manager.read(self._file_name)  # Leer el archivo usando DataManager
+                self._manager.read(self._file_name)  #Leer el archivo usando DataManager
 
-            # Verificar si el DataFrame está vacío
+            #Verificar si el DataFrame está vacío
                 if self._manager.data.empty:
                     ps.QMessageBox.warning(self, "Error", "El archivo está vacío o no tiene datos.")
-                    self.clear_data()  # Limpiar datos en caso de archivo vacío
+                    self.clear_data()  #Limpiar datos en caso de archivo vacío
                     return
             
-                self.show_data(self._manager.data)  # Mostrar datos en QTextEdit
+                self.show_data(self._manager.data)  #Mostrar datos en QTextEdit
                 self.set_dropdown_content(self._manager.data.keys())
             else:
                 print("No se ha seleccionado ningún archivo.")
@@ -104,12 +173,15 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
 
     def show_data(self, data):
-        """Muestra el DataFrame en el QTextEdit."""
-        if len(data) != 0:
-            self._text_edit.clear()  # Limpiar el QTextEdit
-            self._text_edit.setPlainText(data.to_string(index=False))  # Mostrar el DataFrame como texto
-        else:
-            self._text_edit.setPlainText("No hay datos para mostrar.")
+        """Muestra los datos en el QTableWidget."""
+        self._table_widget.setRowCount(data.shape[0])
+        self._table_widget.setColumnCount(data.shape[1])
+        self._table_widget.setHorizontalHeaderLabels(data.columns)
+
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
+                item = ps.QTableWidgetItem(str(data.iat[i, j]))
+                self._table_widget.setItem(i, j, item)
     
 
     #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
@@ -136,12 +208,13 @@ class MainWindow(ps.QMainWindow):
         self._entry_column.show()
         self._target_column.show()
         self._accept_button.show()
-
-    def pre_data(self):
         
-        pass
-    def process_data(self):
 
+
+    def process_data(self):
+        """Detecta los NaN e indica dónde, también controla que no se puedan acceder a ciertas 
+        funcionalidades del programa si no son necesarias
+        """
         if self._entry_column.currentIndex() == self._target_column.currentIndex():
             ps.QMessageBox.warning(self, "Error", "La columnas no pueden ser la misma")
         if (self._entry_column.currentIndex() or self._target_column.currentIndex()) == -1:
@@ -165,9 +238,12 @@ class MainWindow(ps.QMainWindow):
         # Si faltan datos mostrar advertencia al usuario
         if message:
             ps.QMessageBox.warning(self, "Valores Inexistentes", message)
+            self._missing_options.setEnabled(True)
+            self._apply_button.setEnabled(True)
         else:
             ps.QMessageBox.information(self, "Datos Validados", "No se encontraron valores inexistentes en las columnas seleccionadas.")
-
+            self._missing_options.setEnabled(False)
+            self._apply_button.setEnabled(False)
 
 
 if __name__ == "__main__":
