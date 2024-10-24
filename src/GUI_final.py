@@ -12,8 +12,41 @@ class MainWindow(ps.QMainWindow):
     def initUI(self):
         self.setWindowTitle("File Viewer")
         self.setGeometry(100, 100, 900, 500)
-
+        
         layout = ps.QVBoxLayout()
+        #Estilo general
+        self.setStyleSheet("""
+    QMainWindow {
+        background-color: #f0e68c; /* Amarillo pastel */
+        font-family: 'Courier New'; /* Fuente retro */
+    }
+    QLabel {
+        font-size: 20px;
+        color: #2f4f4f; /* Verde oscuro */
+        padding: 10px;
+        border: 2px solid #8b4513; /* Marrón */
+        border-radius: 10px; /* Bordes redondeados */
+        background-color: #fff8dc; /* Fondo color crema */
+    }
+    QPushButton {
+        background-color: #8b0000; /* Rojo oscuro */
+        color: #ffffff; /* Texto blanco */
+        font-size: 18px;
+        padding: 10px;
+        border: 2px solid #ff6347; /* Tomate */
+        border-radius: 5px;
+    }
+    QPushButton:hover {
+        background-color: #ff6347; /* Tomate más brillante */
+        border-color: #ffffff; /* Cambio de color del borde */
+    }
+    QTextEdit {
+        border: 2px solid #cd853f; /* Marrón claro */
+        border-radius: 5px;
+        background-color: #fffaf0; /* Fondo blanco antiguo */
+        font-family: 'Courier New'; /* Fuente retro */
+    }
+""")
 
         # Botón para seleccionar archivo
         self.b1 = ps.QPushButton(text="Añadir archivos")
@@ -29,7 +62,7 @@ class MainWindow(ps.QMainWindow):
         
         # Label para mostrar el nombre del archivo seleccionado
         self._text_box = ps.QLabel("")
-        self._text_box.setStyleSheet("background-color: gray; color: blue; max-height: 25px; max-width: 600px; padding: 5px")
+        self._text_box.setStyleSheet("background-color: white; color: blue; max-height: 25px; max-width: 900px; padding: 5px")
         layout_h.addWidget(self._text_box)
 
         # Botón para eliminar archivo
@@ -84,11 +117,11 @@ class MainWindow(ps.QMainWindow):
 
         self._constant_value_input = ps.QLineEdit()
         self._constant_value_input.setPlaceholderText("Introduce un valor")
-        self._constant_value_input.hide()  # Escondido inicialmente, solo aparece si se selecciona "Rellenar con valor constante"
+        self._constant_value_input.hide()  #Escondido inicialmente, solo aparece si se selecciona "Rellenar con valor constante"
         missing_data_menu.addWidget(self._constant_value_input)
 
         self._apply_button = ps.QPushButton("Aplicar")
-        self._apply_button.setEnabled(False)  # Deshabilitado inicialmente
+        self._apply_button.setEnabled(False)  #Deshabilitado inicialmente
         self._apply_button.clicked.connect(self.apply_missing_data_strategy)
         missing_data_menu.addWidget(self._apply_button)
 
@@ -97,7 +130,10 @@ class MainWindow(ps.QMainWindow):
         central_widget = ps.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
-
+        self.setWindowTitle("Análisis de Regresión Lineal")
+        self.statusBar = ps.QStatusBar()
+        self.setStatusBar(self.statusBar)
+        
     def missing_option_changed(self):
         """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
         if self._missing_options.currentText() == "Rellenar con valor constante":
@@ -111,31 +147,100 @@ class MainWindow(ps.QMainWindow):
     def apply_missing_data_strategy(self):
         """Aplica la estrategia seleccionada para manejar los valores inexistentes."""
         strategy = self._missing_options.currentText()
+        entry_column = self._entry_column.currentText()  # Obtener los nombres de las columnas seleccionadas
+        target_column = self._target_column.currentText()
 
         if self._manager.data is None:
             ps.QMessageBox.warning(self, "Error", "No hay datos cargados para procesar.")
             return
 
-        if strategy == "Eliminar filas":
-            self._manager.data.dropna(inplace=True)
-        elif strategy == "Rellenar con media":
-            self._manager.data.fillna(self._manager.data.mean(), inplace=True)
-        elif strategy == "Rellenar con mediana":
-            self._manager.data.fillna(self._manager.data.median(), inplace=True)
-        elif strategy == "Rellenar con valor constante":
-            constant_value = self._constant_value_input.text()
-            if constant_value == "":
-                ps.QMessageBox.warning(self, "Error", "Por favor, introduce un valor constante.")
-                return
-            try:
-                constant_value = float(constant_value)  # Intentar convertir a número
-            except ValueError:
-                ps.QMessageBox.warning(self, "Error", "El valor constante debe ser un número.")
-                return
-            self._manager.data.fillna(constant_value, inplace=True)
+        entry_nan_count = self._manager.data[entry_column].isna().sum()  # Contar NaN en la columna de entrada
+        target_nan_count = self._manager.data[target_column].isna().sum()  # Contar NaN en la columna objetivo
 
-        # Actualizar la visualización de datos después de aplicar la estrategia
+        # Verificar cuál columna tiene NaN y actuar en consecuencia
+        if entry_nan_count > 0 and target_nan_count > 0:
+            # Preguntar al usuario cuál columna quiere procesar primero
+            choice, ok = ps.QInputDialog.getItem(
+                self,
+                "Seleccionar columna",
+                "Ambas columnas tienen valores inexistentes. ¿Cuál quieres procesar primero?",
+                [entry_column, target_column],
+                0,
+                False)
+            if ok and choice:  # Si el usuario selecciona una opción
+                selected_column = choice
+                other_column = target_column if selected_column == entry_column else entry_column
+            else:
+                return  # Si el usuario cancela, salir de la función
+        elif entry_nan_count > 0:
+            selected_column = entry_column
+            other_column = None
+        elif target_nan_count > 0:
+            selected_column = target_column
+            other_column = None
+        else:
+            ps.QMessageBox.information(self, "Datos", "No hay valores inexistentes en las columnas seleccionadas.")
+            return
+
+                # Aplicar la estrategia de manejo de NaN a la columna seleccionada
+        try:
+            if selected_column is not None:
+                if strategy == "Eliminar filas":
+                    self._manager.data.dropna(subset=[selected_column], inplace=True)
+                elif strategy == "Rellenar con media":
+                    self._manager.data[selected_column] = self._manager.data[selected_column].fillna(self._manager.data[selected_column].mean())
+                elif strategy == "Rellenar con mediana":
+                    self._manager.data[selected_column] = self._manager.data[selected_column].fillna(self._manager.data[selected_column].median())
+                elif strategy == "Rellenar con valor constante":
+                    constant_value = self._constant_value_input.text()
+                    if constant_value == "":
+                        ps.QMessageBox.warning(self, "Error", "Por favor, introduce un valor constante.")
+                        return
+                    try:
+                        constant_value = float(constant_value)  # Intentar convertir a número
+                    except ValueError:
+                        ps.QMessageBox.warning(self, "Error", "El valor constante debe ser un número.")
+                        return
+                    # Rellena NaN en la columna seleccionada con el valor constante
+                    self._manager.data[selected_column] = self._manager.data[selected_column].fillna(constant_value)
+
+                ps.QMessageBox.information(self, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{selected_column}'.")
+            else:
+                pass
+        except Exception as e:
+            ps.QMessageBox.warning(self, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
+        try:
+        # Aplicar la misma estrategia a la otra columna si tiene NaN
+            if other_column is not None:
+                if self._manager.data[other_column].isna().sum() > 0:
+                    if strategy == "Eliminar filas":
+                        self._manager.data.dropna(subset=[other_column], inplace=True)
+                    elif strategy == "Rellenar con media":
+                        self._manager.data[other_column] = self._manager.data[other_column].fillna(self._manager.data[other_column].mean())
+                    elif strategy == "Rellenar con mediana":
+                        self._manager.data[other_column] = self._manager.data[other_column].fillna(self._manager.data[other_column].median())
+                    elif strategy == "Rellenar con valor constante":
+                        constant_value = self._constant_value_input.text()
+                        if constant_value == "":
+                            ps.QMessageBox.warning(self, "Error", "Por favor, introduce un valor constante.")
+                            return
+                        try:
+                            constant_value = float(constant_value)  # Intentar convertir a número
+                        except ValueError:
+                            ps.QMessageBox.warning(self, "Error", "El valor constante debe ser un número.")
+                            return
+                        # Rellena NaN en la columna seleccionada con el valor constante
+                        self._manager.data[other_column] = self._manager.data[other_column].fillna(constant_value)
+                ps.QMessageBox.information(self, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{other_column}'.")
+            else:
+                pass
+        except Exception as e:
+            ps.QMessageBox.warning(self, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
+        # Actualiza la visualización de datos después de aplicar la estrategia
         self.show_data(self._manager.data)
+
+
+
 
     def add_file(self):
         self._file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
@@ -154,6 +259,8 @@ class MainWindow(ps.QMainWindow):
             
                 self.show_data(self._manager.data)  #Mostrar datos en QTextEdit
                 self.set_dropdown_content(self._manager.data.keys())
+                self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
+
             else:
                 print("No se ha seleccionado ningún archivo.")
                 ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
@@ -193,7 +300,8 @@ class MainWindow(ps.QMainWindow):
             self._text_box.clear()
             self._text_edit.clear()
             self._file_name = None
-
+            self._table_widget.clear()
+            self._table_widget.hide()
             self._entry_column.hide() 
             self._entry_column.clear()
             self._target_column.hide()
@@ -251,3 +359,4 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     app.exec()
+
