@@ -49,7 +49,7 @@ def train_linear_model(data, feature_cols, target_col):
     print(f"Coeficiente de determinación (R²): {r2}")
     
     # Devolver el modelo ya entrenado, haciendo model.predict ya obtienes las predicciones
-    return model
+    return model, mse, r2
 if __name__ == "__main__":
     # ejemplo
     data = pd.DataFrame({
