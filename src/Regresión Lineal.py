@@ -3,11 +3,16 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import numpy as np
+import tkinter as tk
+from tkinter.filedialog import askopenfilename
+from data_manager import DataManager
+
+
 # Función para limpiar los datos
 def clean_data(data):
-    # Eliminar todas las columnas no numéricas
+    # Eliminar todas las columnas que no sean numéricas
     data = data.select_dtypes(include=['float64', 'int64'])
-    
+
     # Rellenar o eliminar valores faltantes
     data = data.replace('', pd.NA)  # Convertir cadenas vacías en NaN
     
@@ -52,15 +57,25 @@ def train_linear_model(data, feature_cols, target_col):
     return model, mse, r2
 if __name__ == "__main__":
     # ejemplo
-    data = pd.DataFrame({
-        'col1': [1.0, 2.0, 3.0, 4.0, 5.0],
-        'col2': [2.5, 3.5, 4.5, 5.5, 6.5],
-        'target': [1.1, 1.9, 3.0, 4.1, 4.9]
-    })
+    tk.Tk().withdraw()  # Ocultar ventana principal de tkinter
+    fn = askopenfilename()
+
+    # Crear una instancia de DataManager
+    dm = DataManager()
     
-    # Definir las columnas de características y la columna objetivo
-    feature_columns = ['col1', 'col2']
-    target_column = 'target'
+    # Leer los datos desde un archivo
+    dm.read(fn)  # Cargar los datos en el DataFrame interno de DataManager
     
-    # Entrenar el modelo con los datos de ejemplo
-    trained_model = train_linear_model(data, feature_columns, target_column)
+    # Definir la columna objetivo
+    target_column = 'longitude'  # Cambia al nombre de tu columna objetivo
+
+    # Verificar que la columna objetivo exista en los datos
+    if target_column not in dm.data.columns:
+        raise ValueError(f"La columna objetivo '{target_column}' no existe en los datos.")
+
+    # Seleccionar automáticamente las columnas numéricas, excluyendo la columna objetivo
+    feature_columns = dm.data.select_dtypes(include=['float64', 'int64']).columns.tolist()
+    feature_columns.remove(target_column)  # Excluir la columna objetivo
+
+    # Entrenar el modelo usando los datos de DataManager
+    trained_model, mse, r2 = train_linear_model(dm.data, feature_columns, target_column)
