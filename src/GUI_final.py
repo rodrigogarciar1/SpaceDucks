@@ -1,7 +1,7 @@
 import sys
 import PySide6.QtWidgets as ps
+from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
-
 class MainWindow(ps.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -14,6 +14,7 @@ class MainWindow(ps.QMainWindow):
         self.setGeometry(100, 100, 900, 500)
         
         layout = ps.QVBoxLayout()
+        
         #Estilo general
         self.setStyleSheet("""
     QMainWindow {
@@ -111,6 +112,7 @@ class MainWindow(ps.QMainWindow):
         self._missing_options = ps.QComboBox()
         self._missing_options.addItems(["Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
         self._missing_options.currentIndexChanged.connect(self.missing_option_changed)
+        
         self._missing_options.setEnabled(False)  # Deshabilitado inicialmente
 
         missing_data_menu.addWidget(self._missing_options)
