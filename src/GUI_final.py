@@ -2,6 +2,12 @@ import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from modelo import entrenar_modelo  # Importa la función del módulo
+from resultados import ResultadosWidget  # Importa la clase de resultados
 class MainWindow(ps.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -15,39 +21,7 @@ class MainWindow(ps.QMainWindow):
         
         layout = ps.QVBoxLayout()
         
-        #Estilo general
-        self.setStyleSheet("""
-    QMainWindow {
-        background-color: #f0e68c; /* Amarillo pastel */
-        font-family: 'Courier New'; /* Fuente retro */
-    }
-    QLabel {
-        font-size: 20px;
-        color: #2f4f4f; /* Verde oscuro */
-        padding: 10px;
-        border: 2px solid #8b4513; /* Marrón */
-        border-radius: 10px; /* Bordes redondeados */
-        background-color: #fff8dc; /* Fondo color crema */
-    }
-    QPushButton {
-        background-color: #8b0000; /* Rojo oscuro */
-        color: #ffffff; /* Texto blanco */
-        font-size: 18px;
-        padding: 10px;
-        border: 2px solid #ff6347; /* Tomate */
-        border-radius: 5px;
-    }
-    QPushButton:hover {
-        background-color: #ff6347; /* Tomate más brillante */
-        border-color: #ffffff; /* Cambio de color del borde */
-    }
-    QTextEdit {
-        border: 2px solid #cd853f; /* Marrón claro */
-        border-radius: 5px;
-        background-color: #fffaf0; /* Fondo blanco antiguo */
-        font-family: 'Courier New'; /* Fuente retro */
-    }
-""")
+        
 
         # Botón para seleccionar archivo
         self.b1 = ps.QPushButton(text="Añadir archivos")
@@ -135,7 +109,37 @@ class MainWindow(ps.QMainWindow):
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.statusBar = ps.QStatusBar()
         self.setStatusBar(self.statusBar)
-        
+        # Inicializa tu DataFrame df
+        self.df = pd.DataFrame()  # Carga tu DataFrame aquí
+        self.columnas_entrada = []  # Inicializa las columnas de entrada
+        self.columna_salida = "salida"  # Define tu columna de salida
+
+        # Crea un botón para confirmar el preprocesado
+        self.boton_confirmar = ps.QPushButton("Confirmar Preprocesado")
+        self.boton_confirmar.clicked.connect(self.confirmar_preprocesado)
+
+        # Layout principal
+        layout = ps.QVBoxLayout()
+        layout.addWidget(self.boton_confirmar)
+
+     
+
+    def confirmar_preprocesado(self):
+        if not self.columnas_entrada:
+            ps.QMessageBox.warning(self, "Error", "No se han seleccionado columnas de entrada.")
+            return
+
+        try:
+            # Llama a la función para entrenar el modelo
+            formula, r2, ecm = entrenar_modelo(self.df, self.columnas_entrada, self.columna_salida)
+
+            # Muestra los resultados en una nueva ventana
+            resultados_widget = ResultadosWidget(formula, r2, ecm)
+            resultados_widget.show()
+
+        except Exception as e:
+            ps.critical(self, "Error", f"Ocurrió un error: {str(e)}")
+
     def missing_option_changed(self):
         """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
         if self._missing_options.currentText() == "Rellenar con valor constante":
@@ -320,7 +324,29 @@ class MainWindow(ps.QMainWindow):
         self._accept_button.show()
         
 
+    def plot_regression(self, entry_column, target_column):
+        """Genera un gráfico de los datos y la recta de ajuste."""
+        # Extraer los datos de entrada y salida
+        X = self._manager.data[entry_column].values.reshape(-1, 1)  # Convertir a formato 2D
+        y = self._manager.data[target_column].values
 
+        # Crear el modelo de regresión lineal y ajustarlo a los datos
+        model = LinearRegression()
+        model.fit(X, y)
+
+        # Predecir valores
+        y_pred = model.predict(X)
+
+        # Crear el gráfico
+        plt.figure(figsize=(10, 6))
+        plt.scatter(X, y, color='blue', label='Datos Reales')  # Puntos de datos
+        plt.plot(X, y_pred, color='red', label='Recta de Ajuste')  # Recta de ajuste
+        plt.title('Datos y Recta de Ajuste')
+        plt.xlabel(entry_column)
+        plt.ylabel(target_column)
+        plt.legend()
+        plt.grid()
+        plt.show()
     def process_data(self):
         """Detecta los NaN e indica dónde, también controla que no se puedan acceder a ciertas 
         funcionalidades del programa si no son necesarias
@@ -355,10 +381,11 @@ class MainWindow(ps.QMainWindow):
             self._missing_options.setEnabled(False)
             self._apply_button.setEnabled(False)
 
+                # Llama al método de graficar después de validar
+            self.plot_regression(entry_column, target_column)
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
     window = MainWindow()
     window.show()
     app.exec()
-
