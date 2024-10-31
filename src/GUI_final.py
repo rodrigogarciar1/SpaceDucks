@@ -4,10 +4,10 @@ from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
 from modelo import entrenar_modelo  # Importa la función del módulo
 from resultados import ResultadosWidget  # Importa la clase de resultados
+
+
 class MainWindow(ps.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -156,93 +156,8 @@ class MainWindow(ps.QMainWindow):
         entry_column = self._entry_column.currentText()  # Obtener los nombres de las columnas seleccionadas
         target_column = self._target_column.currentText()
 
-        if self._manager.data is None:
-            ps.QMessageBox.warning(self, "Error", "No hay datos cargados para procesar.")
-            return
+        self._manager.depurate_nan(self, strategy, entry_column, target_column)
 
-        entry_nan_count = self._manager.data[entry_column].isna().sum()  # Contar NaN en la columna de entrada
-        target_nan_count = self._manager.data[target_column].isna().sum()  # Contar NaN en la columna objetivo
-
-        # Verificar cuál columna tiene NaN y actuar en consecuencia
-        if entry_nan_count > 0 and target_nan_count > 0:
-            # Preguntar al usuario cuál columna quiere procesar primero
-            choice, ok = ps.QInputDialog.getItem(
-                self,
-                "Seleccionar columna",
-                "Ambas columnas tienen valores inexistentes. ¿Cuál quieres procesar primero?",
-                [entry_column, target_column],
-                0,
-                False)
-            if ok and choice:  # Si el usuario selecciona una opción
-                selected_column = choice
-                other_column = target_column if selected_column == entry_column else entry_column
-            else:
-                return  # Si el usuario cancela, salir de la función
-        elif entry_nan_count > 0:
-            selected_column = entry_column
-            other_column = None
-        elif target_nan_count > 0:
-            selected_column = target_column
-            other_column = None
-        else:
-            ps.QMessageBox.information(self, "Datos", "No hay valores inexistentes en las columnas seleccionadas.")
-            return
-
-                # Aplicar la estrategia de manejo de NaN a la columna seleccionada
-        try:
-            if selected_column is not None:
-                if strategy == "Eliminar filas":
-                    self._manager.data.dropna(subset=[selected_column], inplace=True)
-                elif strategy == "Rellenar con media":
-                    self._manager.data[selected_column] = self._manager.data[selected_column].fillna(self._manager.data[selected_column].mean())
-                elif strategy == "Rellenar con mediana":
-                    self._manager.data[selected_column] = self._manager.data[selected_column].fillna(self._manager.data[selected_column].median())
-                elif strategy == "Rellenar con valor constante":
-                    constant_value = self._constant_value_input.text()
-                    if constant_value == "":
-                        ps.QMessageBox.warning(self, "Error", "Por favor, introduce un valor constante.")
-                        return
-                    try:
-                        constant_value = float(constant_value)  # Intentar convertir a número
-                    except ValueError:
-                        ps.QMessageBox.warning(self, "Error", "El valor constante debe ser un número.")
-                        return
-                    # Rellena NaN en la columna seleccionada con el valor constante
-                    self._manager.data[selected_column] = self._manager.data[selected_column].fillna(constant_value)
-
-                ps.QMessageBox.information(self, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{selected_column}'.")
-            else:
-                pass
-        except Exception as e:
-            ps.QMessageBox.warning(self, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
-        try:
-        # Aplicar la misma estrategia a la otra columna si tiene NaN
-            if other_column is not None:
-                if self._manager.data[other_column].isna().sum() > 0:
-                    if strategy == "Eliminar filas":
-                        self._manager.data.dropna(subset=[other_column], inplace=True)
-                    elif strategy == "Rellenar con media":
-                        self._manager.data[other_column] = self._manager.data[other_column].fillna(self._manager.data[other_column].mean())
-                    elif strategy == "Rellenar con mediana":
-                        self._manager.data[other_column] = self._manager.data[other_column].fillna(self._manager.data[other_column].median())
-                    elif strategy == "Rellenar con valor constante":
-                        constant_value = self._constant_value_input.text()
-                        if constant_value == "":
-                            ps.QMessageBox.warning(self, "Error", "Por favor, introduce un valor constante.")
-                            return
-                        try:
-                            constant_value = float(constant_value)  # Intentar convertir a número
-                        except ValueError:
-                            ps.QMessageBox.warning(self, "Error", "El valor constante debe ser un número.")
-                            return
-                        # Rellena NaN en la columna seleccionada con el valor constante
-                        self._manager.data[other_column] = self._manager.data[other_column].fillna(constant_value)
-                ps.QMessageBox.information(self, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{other_column}'.")
-            else:
-                pass
-        except Exception as e:
-            ps.QMessageBox.warning(self, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
-        # Actualiza la visualización de datos después de aplicar la estrategia
         self.show_data(self._manager.data)
 
 
@@ -322,31 +237,8 @@ class MainWindow(ps.QMainWindow):
         self._entry_column.show()
         self._target_column.show()
         self._accept_button.show()
-        
 
-    def plot_regression(self, entry_column, target_column):
-        """Genera un gráfico de los datos y la recta de ajuste."""
-        # Extraer los datos de entrada y salida
-        X = self._manager.data[entry_column].values.reshape(-1, 1)  # Convertir a formato 2D
-        y = self._manager.data[target_column].values
 
-        # Crear el modelo de regresión lineal y ajustarlo a los datos
-        model = LinearRegression()
-        model.fit(X, y)
-
-        # Predecir valores
-        y_pred = model.predict(X)
-
-        # Crear el gráfico
-        plt.figure(figsize=(10, 6))
-        plt.scatter(X, y, color='blue', label='Datos Reales')  # Puntos de datos
-        plt.plot(X, y_pred, color='red', label='Recta de Ajuste')  # Recta de ajuste
-        plt.title('Datos y Recta de Ajuste')
-        plt.xlabel(entry_column)
-        plt.ylabel(target_column)
-        plt.legend()
-        plt.grid()
-        plt.show()
     def process_data(self):
         """Detecta los NaN e indica dónde, también controla que no se puedan acceder a ciertas 
         funcionalidades del programa si no son necesarias
@@ -360,30 +252,19 @@ class MainWindow(ps.QMainWindow):
         entry_column = self._entry_column.currentText() #Obtener los nombres de las columnas seleccionadas
         target_column = self._target_column.currentText()
 
-        entry_nan_count = self._manager.data[entry_column].isna().sum() #Detectar valores inexistentes (NaN) en las columnas seleccionadas
+        valid, message = self._manager.foo(entry_column, target_column)
 
-        target_nan_count = self._manager.data[target_column].isna().sum()
+        self._missing_options.setEnabled(not valid)
+        self._apply_button.setEnabled(not valid)
 
-        message = ""  # Crear un mensaje para mostrar la información
+        print(valid)
 
-        if entry_nan_count > 0:
-            message += f"La columna de entrada '{entry_column}' tiene {entry_nan_count} valores inexistentes.\n"
-        if target_nan_count > 0:
-            message += f"La columna objetivo '{target_column}' tiene {target_nan_count} valores inexistentes.\n"
-
-        # Si faltan datos mostrar advertencia al usuario
-        if message:
-            ps.QMessageBox.warning(self, "Valores Inexistentes", message)
-            self._missing_options.setEnabled(True)
-            self._apply_button.setEnabled(True)
+        if valid is True:
+            # Llama al método de graficar después de validar
+            self._manager.plot_regression(entry_column, target_column)
         else:
-            ps.QMessageBox.information(self, "Datos Validados", "No se encontraron valores inexistentes en las columnas seleccionadas.")
-            self._missing_options.setEnabled(False)
-            self._apply_button.setEnabled(False)
-
-                # Llama al método de graficar después de validar
-            self.plot_regression(entry_column, target_column)
-
+            ps.QMessageBox.warning(self, "Valores Inexistentes", message)
+        
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
     window = MainWindow()
