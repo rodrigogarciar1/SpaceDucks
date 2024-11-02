@@ -1,7 +1,9 @@
 import sqlite3 as sq
 import pandas as pd
 from csv_reader import ProcesadorCSV
-
+import PySide6.QtWidgets as ps
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 class DataManager():
     def __init__(self) -> None:
@@ -77,6 +79,114 @@ class DataManager():
         # Cerrar la conexión cuando termines
         conexion.close()
 
+    def foo(self, entry_column, target_column):
+        entry_nan_count = self.data[entry_column].isna().sum() #Detectar valores inexistentes (NaN) en las columnas seleccionadas
+
+        target_nan_count = self.data[target_column].isna().sum()
+
+        message = ""  # Crear un mensaje para mostrar la información
+
+        if entry_nan_count > 0:
+            message += f"La columna de entrada '{entry_column}' tiene {entry_nan_count} valores inexistentes.\n"
+        if target_nan_count > 0:
+            message += f"La columna objetivo '{target_column}' tiene {target_nan_count} valores inexistentes.\n"
+
+        # Si faltan datos mostrar advertencia al usuario
+        if len(message) != 0:
+            return False, message
+        else:
+            return True, message
+
+    def depurate_nan(self, gui, strategy, entry_column, target_column):
+        if self.data is None:
+            ps.QMessageBox.warning(self, "Error", "No hay datos cargados para procesar.")
+        
+        column_data = pd.DataFrame()
+        column_data.assign(selected_column = self.data[entry_column])
+        column_data.assign(other_column = self.data[target_column])
+        
+        print(column_data)
+        entry_nan_count = column_data[entry_column].isna().sum()  # Contar NaN en la columna de entrada
+        target_nan_count = column_data[target_column].isna().sum()  # Contar NaN en la columna objetivo
+
+        # Verificar cuál columna tiene NaN y actuar en consecuencia
+        if entry_nan_count > 0 and target_nan_count > 0:
+            # Preguntar al usuario cuál columna quiere procesar primero
+            choice, ok = ps.QInputDialog.getItem(
+                gui,
+                "Seleccionar columna",
+                "Ambas columnas tienen valores inexistentes. ¿Cuál quieres procesar primero?",
+                [entry_column, target_column],
+                0,
+                False)
+            if ok and choice:  # Si el usuario selecciona una opción
+                selected_column = choice
+                other_column = target_column if selected_column == entry_column else entry_column
+            else:
+                return  # Si el usuario cancela, salir de la función
+        elif entry_nan_count > 0:
+            selected_column = entry_column
+            other_column = None
+        elif target_nan_count > 0:
+            selected_column = target_column
+            other_column = None
+
+        
+
+        self._depuration(gui, column_data, selected_column, strategy)
+        self._depuration(gui, column_data, other_column, strategy)
+    
+    def _depuration(self, gui, column_data, column, strategy):
+        try:
+            if column is not None:
+                    if column_data[column].isna().sum() > 0:
+                        if strategy == "Eliminar filas":
+                            column_data.dropna(subset=[column], inplace=True)
+                        elif strategy == "Rellenar con media":
+                            column_data[column] = column_data[column].fillna(column_data[column].mean())
+                        elif strategy == "Rellenar con mediana":
+                            column_data[column] = column_data[column].fillna(column_data[column].median())
+                        elif strategy == "Rellenar con valor constante":
+                            constant_value = self._constant_value_input.text()
+                            if constant_value == "":
+                                ps.QMessageBox.warning(gui, "Error", "Por favor, introduce un valor constante.")
+                                return
+                            try:
+                                constant_value = float(constant_value)  # Intentar convertir a número
+                            except ValueError:
+                                ps.QMessageBox.warning(gui, "Error", "El valor constante debe ser un número.")
+                                return
+                            # Rellena NaN en la columna seleccionada con el valor constante
+                            column_data[column] = column_data[column].fillna(constant_value)
+                    ps.QMessageBox.information(gui, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{column}'.")
+            else:
+                pass
+        except Exception as e:
+            ps.QMessageBox.warning(gui, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
+
+    def plot_regression(self, entry_column, target_column):
+        """Genera un gráfico de los datos y la recta de ajuste."""
+        # Extraer los datos de entrada y salida
+        X = self.data[entry_column][:].values.reshape(-1, 1)  # Convertir a formato 2D
+        y = self.data[target_column][:].values
+
+        # Crear el modelo de regresión lineal y ajustarlo a los datos
+        model = LinearRegression()
+        model.fit(X, y)
+
+        # Predecir valores
+        y_pred = model.predict(X)
+
+        # Crear el gráfico
+        plt.figure(figsize=(10, 6))
+        plt.scatter(X, y, color='blue', label='Datos Reales')  # Puntos de datos
+        plt.plot(X, y_pred, color='red', label='Recta de Ajuste')  # Recta de ajuste
+        plt.title('Datos y Recta de Ajuste')
+        plt.xlabel(entry_column)
+        plt.ylabel(target_column)
+        plt.legend()
+        plt.grid()
+        plt.show()
 
 if __name__ == "__main__":
     dm = DataManager()
