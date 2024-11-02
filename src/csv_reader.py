@@ -38,6 +38,8 @@ class ProcesadorCSV():
                 elemento = lista[i][j]
                 if self.is_float(elemento):  # Verifica si el elemento puede ser convertido a float
                     lista[i][j] = float(elemento)  # Convierte el elemento a float
+                if elemento == "" and j != len(lista[i])-1:
+                    lista[i][j] = None
         return lista
     
     def procesar_csv(self):
