@@ -2,6 +2,8 @@ import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
+from modelo import entrenar_modelo  # Importa la función del módulo
+from resultados import ResultadosWidget  # Importa la clase de resultados
 
 class MainWindow(ps.QMainWindow):
     def __init__(self):
@@ -73,9 +75,11 @@ class MainWindow(ps.QMainWindow):
         layout_h.addWidget(self.b3)
         layout.addLayout(layout_h)
 
-        # Tabla para mostrar los datos del DataFrame
+            # Tabla para mostrar los datos del DataFrame
         self._table_widget = ps.QTableWidget()
         layout.addWidget(self._table_widget)
+
+        linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
 
         # Dropdown para la selección de la columna de datos
         self._entry_column = ps.QComboBox()
@@ -85,44 +89,147 @@ class MainWindow(ps.QMainWindow):
         # Dropdown para la selección de la columna objetivo
         self._target_column = ps.QComboBox()
         self._target_column.hide()
+        
+        linear_menu.addWidget(self._target_column)
 
-        # Área de texto para la descripción del modelo
-        self._description_edit = ps.QTextEdit()
-        self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
-        layout.addWidget(self._description_edit)
-
-        # Botón para guardar el modelo (incluye descripción)
-        self.save_button = ps.QPushButton("Guardar Modelo")
-        self.save_button.clicked.connect(self.save_model)
-        layout.addWidget(self.save_button)
+        #Botón para procesar el modelo de regresión lineal
+        self._accept_button = ps.QPushButton(text="Procesar")
+        self._accept_button.setStyleSheet("display = inline-box")
+        self._accept_button.hide()
+        self._accept_button.clicked.connect(self.process_data)
+        linear_menu.addWidget(self._accept_button)
+        layout.addLayout(linear_menu)
 
         central_widget = ps.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
+        # Opciones de manejo de valores inexistentes
+        missing_data_menu = ps.QHBoxLayout()
+
+        self._missing_options = ps.QComboBox()
+        self._missing_options.addItems(["Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
+        self._missing_options.currentIndexChanged.connect(self.missing_option_changed)
+        
+        self._missing_options.hide()  # Deshabilitado inicialmente
+
+        missing_data_menu.addWidget(self._missing_options)
+
+        self._constant_value_input = ps.QLineEdit()
+        self._constant_value_input.setPlaceholderText("Introduce un valor")
+        self._constant_value_input.hide()  #Escondido inicialmente, solo aparece si se selecciona "Rellenar con valor constante"
+        missing_data_menu.addWidget(self._constant_value_input)
+
+        self._apply_button = ps.QPushButton("Aplicar")
+        self._apply_button.hide()  #Deshabilitado inicialmente
+        self._apply_button.clicked.connect(self.apply_missing_data_strategy)
+        missing_data_menu.addWidget(self._apply_button)
+
+        layout.addLayout(missing_data_menu)
+
+        central_widget = ps.QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+        self.setWindowTitle("Análisis de Regresión Lineal")
+        self.statusBar = ps.QStatusBar()
+        self.setStatusBar(self.statusBar)
+        # Crea un botón para confirmar el preprocesado
+        self.boton_confirmar = ps.QPushButton("Confirmar Preprocesado")
+        self.boton_confirmar.clicked.connect(self.confirmar_preprocesado)
+
+        # Área de texto para la descripción del modelo
+        self._description_edit = ps.QTextEdit()
+        self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
+        self._description_edit.hide()
+        layout.addWidget(self._description_edit)
+          # Botón para guardar el modelo (incluye descripción)
+        self.save_button = ps.QPushButton("Guardar Modelo")
+        self.save_button.clicked.connect(self.save_model)
+        self.save_button.hide()
+        layout.addWidget(self.save_button)
+        
+
+        # Layout principal
+        layout = ps.QVBoxLayout()
+        layout.addWidget(self.boton_confirmar)
+
+
+    def confirmar_preprocesado(self):
+        if not self._entry_column.currentText():
+            ps.QMessageBox.warning(self, "Error", "No se han seleccionado columnas de entrada.")
+            return
+
+        try:
+            # Llama a la función para entrenar el modelo
+            formula, r2, ecm = entrenar_modelo(self._manager.data, self._entry_column.currentText(), self._target_column.currentText())
+
+            # Muestra los resultados en una nueva ventana
+            resultados_widget = ResultadosWidget(formula, r2, ecm)
+            resultados_widget.show()
+
+        except Exception as e:
+            ps.critical(self, "Error", f"Ocurrió un error: {str(e)}")
+
+    def missing_option_changed(self):
+        """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
+        if self._missing_options.currentText() == "Rellenar con valor constante":
+            self._constant_value_input.show()
+        else:
+            self._constant_value_input.hide()
+
+
+            
+
+    def apply_missing_data_strategy(self):
+        """Aplica la estrategia seleccionada para manejar los valores inexistentes."""
+        strategy = self._missing_options.currentText()
+        entry_column = self._entry_column.currentText()  # Obtener los nombres de las columnas seleccionadas
+        target_column = self._target_column.currentText()
+
+        self._manager.depurate_nan(self, strategy, entry_column, target_column)
+
+        self.show_data(self._manager.data)
+
+        self._manager.plot_regression(entry_column, target_column)
+        self.save_button.show()
+        self._description_edit.show()
+
     def add_file(self):
-        # Método para seleccionar un archivo y guardar su nombre
         self._file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
-        if self._file_name:
-            self._text_box.setText(f"Archivo seleccionado: {self._file_name}")
+        self._text_box.setText(self._file_name)
 
     def data_reader(self):
-        """Función para leer y mostrar los datos."""
-        try:
+        try: #Gestión de errores
             if self._file_name:
-                self._manager.read(self._file_name)  # Leer el archivo usando DataManager
+                self._manager.read(self._file_name)  #Leer el archivo usando DataManager
 
+            #Verificar si el DataFrame está vacío
                 if self._manager.data.empty:
                     ps.QMessageBox.warning(self, "Error", "El archivo está vacío o no tiene datos.")
-                    self.clear_data()
+                    self.clear_data()  #Limpiar datos en caso de archivo vacío
                     return
             
-                self.show_data(self._manager.data)  # Mostrar datos en la tabla
-                self._table_widget.show()
+                self.show_data(self._manager.data)  #Mostrar datos en QTextEdit
+                self.set_dropdown_content(self._manager.data.keys())
+                self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
+
             else:
+                print("No se ha seleccionado ningún archivo.")
                 ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
+        except IndexError:
+            ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
+        except FileNotFoundError:
+            ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
+        except PermissionError:
+            ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
+        except ValueError:
+            ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
+        except UnicodeDecodeError:
+            ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
+        except MemoryError:
+            ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
         except Exception as e:
-            ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")
+            ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
 
     def show_data(self, data):
         """Muestra los datos en el QTableWidget."""
@@ -135,13 +242,73 @@ class MainWindow(ps.QMainWindow):
                 item = ps.QTableWidgetItem(str(data.iat[i, j]))
                 self._table_widget.setItem(i, j, item)
 
+    #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
     def clear_data(self):
-        """Limpia los datos y la descripción."""
-        self._text_box.clear()
-        self._description_edit.clear()
-        self._file_name = None
-        self._table_widget.clear()
-        self._table_widget.hide()
+        if not self._file_name:
+            print("No hay archivo seleccionado.")
+        else:
+
+            self._text_box.clear()
+            self._file_name = None
+            self._table_widget.clear()
+
+            self._entry_column.hide() 
+            self._entry_column.clear()
+            self._target_column.hide()
+            self._target_column.clear()
+            self._accept_button.hide()
+
+            self._missing_options.hide()
+            self._apply_button.hide()
+
+            self.save_button.hide()
+            self._description_edit.hide()
+
+    def set_dropdown_content(self, contents):
+        self._entry_column.addItem("-- Columna de entrada --")
+        self._entry_column.model().item(0).setEnabled(False)
+        self._entry_column.addItems(contents) #Cambia el contenido de los dropdowns
+
+        self._target_column.addItem("-- Columna de objetivo --")
+        self._target_column.model().item(0).setEnabled(False)
+        self._target_column.addItems(contents)
+
+        #Hace los dropdows y el botón visibles
+        self._entry_column.show()
+        self._target_column.show()
+        self._accept_button.show()
+
+
+    def process_data(self):
+        """Detecta los NaN e indica dónde, también controla que no se puedan acceder a ciertas 
+        funcionalidades del programa si no son necesarias
+        """
+        if self._entry_column.currentIndex() == 0 or self._target_column.currentIndex() == 0:
+            ps.QMessageBox.warning(self, "Error", "Selecciona valores válidos")
+            return
+        if self._entry_column.currentIndex() == self._target_column.currentIndex():
+            ps.QMessageBox.warning(self, "Error", "La columnas no pueden ser la misma")
+            return
+        
+        
+        entry_column = self._entry_column.currentText() #Obtener los nombres de las columnas seleccionadas
+        target_column = self._target_column.currentText()
+
+        valid, message = self._manager.foo(entry_column, target_column)
+
+        if not valid:
+            self._missing_options.show()
+            self._apply_button.show()
+            ps.QMessageBox.warning(self, "Valores Inexistentes", message)
+            return
+
+
+        
+        # Llama al método de graficar después de validar
+        self._manager.plot_regression(entry_column, target_column)
+        self.save_button.show()
+        self._description_edit.show()
+
 
     def save_model(self):
         """Guarda el modelo junto con la descripción."""
