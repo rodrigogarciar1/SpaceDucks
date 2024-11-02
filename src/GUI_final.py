@@ -1,11 +1,11 @@
 import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
-from backend.data_manager import DataManager   # Importa el módulo data_manager correctamente
+from data_manager import DataManager   # Importa el módulo data_manager correctamente
 import numpy as np
 import pandas as pd
-from backend.modelo import entrenar_modelo  # Importa la función del módulo
-from backend.resultados import ResultadosWidget  # Importa la clase de resultados
+from modelo import entrenar_modelo  # Importa la función del módulo
+from resultados import ResultadosWidget  # Importa la clase de resultados
 
 
 class MainWindow(ps.QMainWindow):

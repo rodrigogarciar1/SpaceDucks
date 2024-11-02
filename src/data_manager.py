@@ -1,6 +1,6 @@
 import sqlite3 as sq
 import pandas as pd
-from backend.csv_reader import ProcesadorCSV
+from csv_reader import ProcesadorCSV
 import PySide6.QtWidgets as ps
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
