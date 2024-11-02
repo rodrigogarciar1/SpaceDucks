@@ -77,6 +77,15 @@ class MainWindow(ps.QMainWindow):
         self._table_widget = ps.QTableWidget()
         layout.addWidget(self._table_widget)
 
+        # Dropdown para la selección de la columna de datos
+        self._entry_column = ps.QComboBox()
+        self._entry_column.hide()  # Ocultar inicialmente
+        linear_menu.addWidget(self._entry_column)
+
+        # Dropdown para la selección de la columna objetivo
+        self._target_column = ps.QComboBox()
+        self._target_column.hide()
+
         # Área de texto para la descripción del modelo
         self._description_edit = ps.QTextEdit()
         self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
@@ -153,4 +162,5 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     app.exec()
+
 
