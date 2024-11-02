@@ -2,6 +2,7 @@ import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from backend.data_manager import DataManager   # Importa el módulo data_manager correctamente
+import numpy as np
 import pandas as pd
 from backend.modelo import entrenar_modelo  # Importa la función del módulo
 from backend.resultados import ResultadosWidget  # Importa la clase de resultados
@@ -108,6 +109,10 @@ class MainWindow(ps.QMainWindow):
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.statusBar = ps.QStatusBar()
         self.setStatusBar(self.statusBar)
+        # Inicializa tu DataFrame df
+        self.df = pd.DataFrame()  # Carga tu DataFrame aquí
+        self.columnas_entrada = []  # Inicializa las columnas de entrada
+        self.columna_salida = "salida"  # Define tu columna de salida
 
         # Crea un botón para confirmar el preprocesado
         self.boton_confirmar = ps.QPushButton("Confirmar Preprocesado")
@@ -126,7 +131,7 @@ class MainWindow(ps.QMainWindow):
 
         try:
             # Llama a la función para entrenar el modelo
-            formula, r2, ecm = entrenar_modelo(self._manager.data, self._entry_column.currentText(), self._target_column.currentText())
+            formula, r2, ecm = entrenar_modelo(self.df, self.columnas_entrada, self.columna_salida)
 
             # Muestra los resultados en una nueva ventana
             resultados_widget = ResultadosWidget(formula, r2, ecm)
