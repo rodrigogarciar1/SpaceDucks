@@ -1,6 +1,6 @@
 import joblib
 
-def save_model_with_description(model, description, filename):
+def save_model_with_description(model, description, metrics, filename):
     """
     Save a model with a description using joblib.
 
@@ -15,7 +15,8 @@ def save_model_with_description(model, description, filename):
     # Create a dictionary containing both the model and the description
     data_to_save = {
         'model': model,
-        'description': description
+        'description': description,
+        'metrics': metrics
     }
     
     # Save the dictionary to a joblib file
@@ -26,4 +27,5 @@ def load_model_with_description(filename):
     loaded_data = joblib.load("filename")
     model = loaded_data['model']
     description = loaded_data['description']
-    return model, description
+    metrics = loaded_data['metrics']
+    return model, description, metrics
