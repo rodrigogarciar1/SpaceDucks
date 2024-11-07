@@ -2,7 +2,7 @@ import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
-from modelo import entrenar_modelo  # Importa la función del módulo
+from modelo import *  # Importa la función del módulo
 from resultados import ResultadosWidget  # Importa la clase de resultados
 
 class MainWindow(ps.QMainWindow):
@@ -133,9 +133,7 @@ class MainWindow(ps.QMainWindow):
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.statusBar = ps.QStatusBar()
         self.setStatusBar(self.statusBar)
-        # Crea un botón para confirmar el preprocesado
-        self.boton_confirmar = ps.QPushButton("Confirmar Preprocesado")
-        self.boton_confirmar.clicked.connect(self.confirmar_preprocesado)
+        
 
         # Área de texto para la descripción del modelo
         self._description_edit = ps.QTextEdit()
@@ -152,25 +150,9 @@ class MainWindow(ps.QMainWindow):
 
         # Layout principal
         layout = ps.QVBoxLayout()
-        layout.addWidget(self.boton_confirmar)
 
 
-    def confirmar_preprocesado(self):
-        if not self._entry_column.currentText():
-            ps.QMessageBox.warning(self, "Error", "No se han seleccionado columnas de entrada.")
-            return
-
-        try:
-            # Llama a la función para entrenar el modelo
-            formula, r2, ecm = entrenar_modelo(self._manager.data, self._entry_column.currentText(), self._target_column.currentText())
-
-            # Muestra los resultados en una nueva ventana
-            resultados_widget = ResultadosWidget(formula, r2, ecm)
-            resultados_widget.show()
-
-        except Exception as e:
-            ps.critical(self, "Error", f"Ocurrió un error: {str(e)}")
-
+    
     def missing_option_changed(self):
         """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
         if self._missing_options.currentText() == "Rellenar con valor constante":
@@ -191,7 +173,6 @@ class MainWindow(ps.QMainWindow):
 
         self.show_data(self._manager.data)
 
-        self._manager.plot_regression(entry_column, target_column)
         self.save_button.show()
         self._description_edit.show()
 
@@ -295,7 +276,7 @@ class MainWindow(ps.QMainWindow):
         entry_column = self._entry_column.currentText() #Obtener los nombres de las columnas seleccionadas
         target_column = self._target_column.currentText()
 
-        valid, message = self._manager.foo(entry_column, target_column)
+        valid, message = self._manager.count_nan(entry_column, target_column)
 
         if not valid:
             self._missing_options.show()
@@ -307,6 +288,8 @@ class MainWindow(ps.QMainWindow):
         
         # Llama al método de graficar después de validar
         self._manager.plot_regression(self._manager.data[entry_column], self._manager.data[target_column])
+        #formula, r2, ecm = self._manager.entrenar_modelo(self._manager.data[entry_column], self._manager.data[target_column])
+        
         self.save_button.show()
         self._description_edit.show()
 

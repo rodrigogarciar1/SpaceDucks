@@ -5,6 +5,9 @@ import PySide6.QtWidgets as ps
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+
 class DataManager():
     def __init__(self) -> None:
         self.data = pd.DataFrame()
@@ -79,7 +82,7 @@ class DataManager():
         # Cerrar la conexión cuando termines
         conexion.close()
 
-    def check_nan(self, entry_column, target_column):
+    def count_nan(self, entry_column, target_column):
         entry_nan_count = self.data[entry_column].isna().sum() #Detectar valores inexistentes (NaN) en las columnas seleccionadas
 
         target_nan_count = self.data[target_column].isna().sum()
@@ -174,11 +177,22 @@ class DataManager():
         y = target_column[:].values
 
         # Crear el modelo de regresión lineal y ajustarlo a los datos
-        model = LinearRegression()
-        model.fit(X, y)
+        modelo = LinearRegression()
+        modelo.fit(X, y)
 
         # Predecir valores
-        y_pred = model.predict(X)
+        y_pred = modelo.predict(X)
+        coeficientes = modelo.coef_
+        intercepto = modelo.intercept_
+        formula = f"{y} = " + " + ".join([f"{coef:.2f} * {col}" for coef, col in zip(coeficientes,X)]) + f" + {intercepto:.2f}"
+
+        # Predicciones y métricas
+        y_pred = modelo.predict(X)
+        r2 = r2_score(y, y_pred)
+        ecm = mean_squared_error(y, y_pred)
+        print(formula)
+        print(r2)
+        print(ecm)
 
         # Crear el gráfico
         plt.figure(figsize=(10, 6))
@@ -190,7 +204,29 @@ class DataManager():
         plt.legend()
         plt.grid()
         plt.show()
+        return formula, r2, ecm
 
+    def entrenar_modelo(self, columnas_entrada, columna_salida):
+        X = self.data[columnas_entrada]
+        y = self.data[columna_salida]
+
+        modelo = LinearRegression()
+        modelo.fit(X, y)
+
+        # Coeficientes y fórmula
+        coeficientes = modelo.coef_
+        intercepto = modelo.intercept_
+        formula = f"{columna_salida} = " + " + ".join([f"{coef:.2f} * {col}" for coef, col in zip(coeficientes, columnas_entrada)]) + f" + {intercepto:.2f}"
+
+        # Predicciones y métricas
+        y_pred = modelo.predict(X)
+        r2 = r2_score(y, y_pred)
+        ecm = mean_squared_error(y, y_pred)
+        print(formula)
+        print(r2)
+        print(ecm)
+
+        return formula, r2, ecm
 if __name__ == "__main__":
     dm = DataManager()
     dm.read()

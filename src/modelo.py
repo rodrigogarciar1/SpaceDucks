@@ -19,7 +19,9 @@ def entrenar_modelo(df, columnas_entrada, columna_salida):
     y_pred = modelo.predict(X)
     r2 = r2_score(y, y_pred)
     ecm = mean_squared_error(y, y_pred)
-   
+    print(formula)
+    print(r2)
+    print(ecm)
 
     return formula, r2, ecm
 
