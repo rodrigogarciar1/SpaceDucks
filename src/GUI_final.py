@@ -1,9 +1,14 @@
 import sys
+import io
 import PySide6.QtWidgets as ps
 from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
-from modelo import *  # Importa la función del módulo
+from modelo import entrenar_y_graficar_modelo
 from resultados import ResultadosWidget  # Importa la clase de resultados
+import matplotlib.pyplot as plt
+from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt
+
 
 class MainWindow(ps.QMainWindow):
     def __init__(self):
@@ -100,11 +105,25 @@ class MainWindow(ps.QMainWindow):
         linear_menu.addWidget(self._accept_button)
         layout.addLayout(linear_menu)
 
+
+        #Etiqueta para mostrar la fórmula de regresión
+        self.formula_label = ps.QLabel("Fórmula de Regresión: ")
+        layout.addWidget(self.formula_label)
+        self.formula_label.hide()
+        #Etiquetas para mostrar R² y ECM
+        self.r2_label = ps.QLabel("R²: ")
+        self.ecm_label = ps.QLabel("ECM: ")
+        self.ecm_label.hide()
+        self.r2_label.hide()
+        layout.addWidget(self.r2_label)
+        layout.addWidget(self.ecm_label)
+        
+        #Configuración del widget central
         central_widget = ps.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
-        # Opciones de manejo de valores inexistentes
+        #Opciones de manejo de valores inexistentes
         missing_data_menu = ps.QHBoxLayout()
 
         self._missing_options = ps.QComboBox()
@@ -127,9 +146,7 @@ class MainWindow(ps.QMainWindow):
 
         layout.addLayout(missing_data_menu)
 
-        central_widget = ps.QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.statusBar = ps.QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -260,6 +277,49 @@ class MainWindow(ps.QMainWindow):
         self._target_column.show()
         self._accept_button.show()
 
+    def plot_regression(self, columnas_entrada, columna_salida):
+        """Llama a la función `entrenar_y_graficar_modelo` y muestra los resultados en la interfaz."""
+        try:
+            # Eliminar gráfica anterior si existe
+            if hasattr(self, 'graph_label'):
+                self.graph_label.deleteLater()
+
+            # Llamada a la función para entrenar el modelo y obtener la fórmula y métricas
+            formula, r2, ecm = entrenar_y_graficar_modelo(self._manager.data, columnas_entrada, columna_salida)
+
+            # Actualiza las etiquetas con la fórmula y métricas
+            self.formula_label.setText(f"Fórmula de Regresión: {formula}")
+            self.r2_label.setText(f"R²: {r2:.4f}")
+            self.ecm_label.setText(f"ECM: {ecm:.4f}")
+            self.r2_label.show()
+            self.ecm_label.show()
+            self.formula_label.show()
+
+            # Genera la gráfica y conviértela en una imagen
+            fig, ax = plt.subplots()
+            ax.plot(self._manager.data[columnas_entrada], self._manager.data[columna_salida], label="Regresión")
+            ax.set_xlabel(columnas_entrada[0])
+            ax.set_ylabel(columna_salida)
+            ax.legend()
+
+            # Convertir la gráfica a un formato de imagen
+            buf = io.BytesIO()
+            fig.savefig(buf, format='png')
+            buf.seek(0)
+            pixmap = QPixmap()
+            pixmap.loadFromData(buf.read())
+
+            # Crear un QLabel para mostrar la gráfica
+            self.graph_label = ps.QLabel(self)
+            self.graph_label.setPixmap(pixmap)
+            self.graph_label.setAlignment(ps.Qt.AlignmentFlag.AlignCenter)  # Centra la imagen en el QLabel
+
+            # Mensaje de éxito
+            ps.QMessageBox.information(self, "Éxito", "El modelo de regresión se ha creado correctamente.")
+        
+        except Exception as e:
+            # Muestra un mensaje de error si algo falla
+            ps.QMessageBox.critical(self, "Error", f"Ocurrió un error al crear el modelo: {str(e)}")
 
     def process_data(self):
         """Detecta los NaN e indica dónde, también controla que no se puedan acceder a ciertas 
@@ -284,12 +344,12 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.warning(self, "Valores Inexistentes", message)
             return
 
-
-        
-        # Llama al método de graficar después de validar
-        self._manager.plot_regression(self._manager.data[entry_column], self._manager.data[target_column])
-        #formula, r2, ecm = self._manager.entrenar_modelo(self._manager.data[entry_column], self._manager.data[target_column])
-        
+        # Llama a plot_regression con las columnas seleccionadas
+        columnas_entrada = [entry_column]
+        columna_salida = target_column
+        self.plot_regression(columnas_entrada, columna_salida)
+            
+         #Muestra el botón para guardar el modelo y el campo de descripción
         self.save_button.show()
         self._description_edit.show()
 
