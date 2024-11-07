@@ -79,7 +79,7 @@ class DataManager():
         # Cerrar la conexión cuando termines
         conexion.close()
 
-    def foo(self, entry_column, target_column):
+    def check_nan(self, entry_column, target_column):
         entry_nan_count = self.data[entry_column].isna().sum() #Detectar valores inexistentes (NaN) en las columnas seleccionadas
 
         target_nan_count = self.data[target_column].isna().sum()
