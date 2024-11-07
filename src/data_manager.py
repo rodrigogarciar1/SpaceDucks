@@ -101,9 +101,8 @@ class DataManager():
         if self.data is None:
             ps.QMessageBox.warning(self, "Error", "No hay datos cargados para procesar.")
         
-        column_data = pd.DataFrame()
-        column_data.assign(selected_column = self.data[entry_column])
-        column_data.assign(other_column = self.data[target_column])
+        d = {entry_column: list(self.data[entry_column]), target_column: list(self.data[target_column])}
+        column_data = pd.DataFrame(data=d)
         
         print(column_data)
         entry_nan_count = column_data[entry_column].isna().sum()  # Contar NaN en la columna de entrada
@@ -136,6 +135,9 @@ class DataManager():
         self._depuration(gui, column_data, selected_column, strategy)
         self._depuration(gui, column_data, other_column, strategy)
     
+        return column_data[entry_column], column_data[target_column]
+    
+
     def _depuration(self, gui, column_data, column, strategy):
         try:
             if column is not None:
@@ -164,11 +166,12 @@ class DataManager():
         except Exception as e:
             ps.QMessageBox.warning(gui, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
 
+
     def plot_regression(self, entry_column, target_column):
         """Genera un gráfico de los datos y la recta de ajuste."""
         # Extraer los datos de entrada y salida
-        X = self.data[entry_column][:].values.reshape(-1, 1)  # Convertir a formato 2D
-        y = self.data[target_column][:].values
+        X = entry_column[:].values.reshape(-1, 1)  # Convertir a formato 2D
+        y = target_column[:].values
 
         # Crear el modelo de regresión lineal y ajustarlo a los datos
         model = LinearRegression()

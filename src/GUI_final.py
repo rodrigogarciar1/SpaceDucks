@@ -140,6 +140,7 @@ class MainWindow(ps.QMainWindow):
         # Área de texto para la descripción del modelo
         self._description_edit = ps.QTextEdit()
         self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
+        self._description_edit.setStyleSheet("color: black")
         self._description_edit.hide()
         layout.addWidget(self._description_edit)
           # Botón para guardar el modelo (incluye descripción)
@@ -186,7 +187,7 @@ class MainWindow(ps.QMainWindow):
         entry_column = self._entry_column.currentText()  # Obtener los nombres de las columnas seleccionadas
         target_column = self._target_column.currentText()
 
-        self._manager.depurate_nan(self, strategy, entry_column, target_column)
+        entry_column, target_column =self._manager.depurate_nan(self, strategy, entry_column, target_column)
 
         self.show_data(self._manager.data)
 
@@ -305,7 +306,7 @@ class MainWindow(ps.QMainWindow):
 
         
         # Llama al método de graficar después de validar
-        self._manager.plot_regression(entry_column, target_column)
+        self._manager.plot_regression(self._manager.data[entry_column], self._manager.data[target_column])
         self.save_button.show()
         self._description_edit.show()
 
