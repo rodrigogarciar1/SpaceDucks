@@ -4,7 +4,7 @@ from csv_reader import ProcesadorCSV
 import PySide6.QtWidgets as ps
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-
+import joblib
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 
@@ -170,7 +170,37 @@ class DataManager():
             ps.QMessageBox.warning(gui, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
 
 
-    
+    def save_model_with_description(self, model, description, metrics, formule, filename):
+        """
+        Save a model with a description using joblib.
+
+        Parameters:
+        - model: The trained model to save (e.g., a scikit-learn estimator).
+        - description: A string describing the model (e.g., "RandomForest model trained on dataset X").
+        - filename: The name of the file to save the model and description to, with .joblib extension.
+
+        Returns:
+        None
+        """
+        # Create a dictionary containing both the model and the description
+        data_to_save = {
+            'model': model,
+            'description': description,
+            'metrics': metrics,
+            'formule': formule
+        }
+        
+        # Save the dictionary to a joblib file
+        joblib.dump(data_to_save, filename)
+        print(f"Model and description saved to {filename}")
+
+    def load_model_with_description(self, filename):
+        loaded_data = joblib.load(filename)
+        model = loaded_data['model']
+        description = loaded_data['description']
+        metrics = loaded_data['metrics']
+        formule = loaded_data['formule']
+        return model, description, metrics, formule
 
     
 if __name__ == "__main__":

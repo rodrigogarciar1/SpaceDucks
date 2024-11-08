@@ -16,6 +16,8 @@ class MainWindow(ps.QMainWindow):
         self._file_name = None
         self.initUI()
         self._manager = DataManager()
+        self._metricas = [0, 0]
+        self._formula = ""
 
     def initUI(self):
         self.setWindowTitle("File Viewer")
@@ -56,11 +58,17 @@ class MainWindow(ps.QMainWindow):
                 font-family: 'Courier New'; /* Fuente retro */
             }
         """)
-
+        layout_h = ps.QHBoxLayout()
         # Botón para seleccionar archivo
         self.b1 = ps.QPushButton(text="Añadir archivos")
         self.b1.clicked.connect(self.add_file)
-        layout.addWidget(self.b1)
+        layout_h.addWidget(self.b1)
+
+        self.model_button = ps.QPushButton(text="Añadir modelo")
+        self.model_button.clicked.connect(self.add_model)
+        layout_h.addWidget(self.model_button)
+
+        layout.addLayout(layout_h)
 
         # Botón para visualizar archivo
         self.b2 = ps.QPushButton(text="Visualizar archivo")
@@ -168,7 +176,10 @@ class MainWindow(ps.QMainWindow):
         # Layout principal
         layout = ps.QVBoxLayout()
 
-
+    def add_model(self):
+        self._file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
+        self._text_box.setText(self._file_name)
+        
     
     def missing_option_changed(self):
         """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
@@ -198,37 +209,70 @@ class MainWindow(ps.QMainWindow):
         self._text_box.setText(self._file_name)
 
     def data_reader(self):
-        try: #Gestión de errores
-            if self._file_name:
-                self._manager.read(self._file_name)  #Leer el archivo usando DataManager
+        if self._file_name.endswith(".joblib"):
+            try:
+                self._modelo, self.model_description, self._metricas, self._formula = self._manager.load_model_with_description(self._file_name)
+                
+                self.b1.hide()
+                self._table_widget.hide()
 
-            #Verificar si el DataFrame está vacío
-                if self._manager.data.empty:
-                    ps.QMessageBox.warning(self, "Error", "El archivo está vacío o no tiene datos.")
-                    self.clear_data()  #Limpiar datos en caso de archivo vacío
-                    return
-            
-                self.show_data(self._manager.data)  #Mostrar datos en QTextEdit
-                self.set_dropdown_content(self._manager.data.keys())
-                self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
+                self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
+                self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
+                self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
+                self.r2_label.show()
+                self.ecm_label.show()
+                self.formula_label.show()
 
-            else:
-                print("No se ha seleccionado ningún archivo.")
-                ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
-        except IndexError:
-            ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
-        except FileNotFoundError:
-            ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
-        except PermissionError:
-            ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
-        except ValueError:
-            ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
-        except UnicodeDecodeError:
-            ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
-        except MemoryError:
-            ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
-        except Exception as e:
-            ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
+                ps.QMessageBox.information(self, "Éxito", "El archivo se ha cargado correctamente.")
+
+            except IndexError:
+                ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
+            except FileNotFoundError:
+                ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
+            except PermissionError:
+                ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
+            except ValueError:
+                ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
+            except UnicodeDecodeError:
+                ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
+            except MemoryError:
+                ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
+            except Exception as e:
+                ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")
+
+
+        else:
+            try: #Gestión de errores
+                if self._file_name:
+                    self._manager.read(self._file_name)  #Leer el archivo usando DataManager
+
+                #Verificar si el DataFrame está vacío
+                    if self._manager.data.empty:
+                        ps.QMessageBox.warning(self, "Error", "El archivo está vacío o no tiene datos.")
+                        self.clear_data()  #Limpiar datos en caso de archivo vacío
+                        return
+                
+                    self.show_data(self._manager.data)  #Mostrar datos en QTextEdit
+                    self.set_dropdown_content(self._manager.data.keys())
+                    self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
+
+                else:
+                    print("No se ha seleccionado ningún archivo.")
+                    ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
+            except IndexError:
+                ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
+            except FileNotFoundError:
+                ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
+            except PermissionError:
+                ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
+            except ValueError:
+                ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
+            except UnicodeDecodeError:
+                ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
+            except MemoryError:
+                ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
+            except Exception as e:
+                ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
 
     def show_data(self, data):
         """Muestra los datos en el QTableWidget."""
@@ -263,6 +307,11 @@ class MainWindow(ps.QMainWindow):
             self.save_button.hide()
             self._description_edit.hide()
 
+            self.r2_label.hide()
+            self.ecm_label.hide()
+            self.formula_label.hide()
+
+
     def set_dropdown_content(self, contents):
         self._entry_column.addItem("-- Columna de entrada --")
         self._entry_column.model().item(0).setEnabled(False)
@@ -285,12 +334,12 @@ class MainWindow(ps.QMainWindow):
                 self.graph_label.deleteLater()
 
             # Llamada a la función para entrenar el modelo y obtener la fórmula y métricas
-            formula, r2, ecm = entrenar_y_graficar_modelo(self._manager.data, columnas_entrada, columna_salida)
+            self._formula, self._metricas[0], self._metricas[1], self._modelo = entrenar_y_graficar_modelo(self._manager.data, columnas_entrada, columna_salida)
 
             # Actualiza las etiquetas con la fórmula y métricas
-            self.formula_label.setText(f"Fórmula de Regresión: {formula}")
-            self.r2_label.setText(f"R²: {r2:.4f}")
-            self.ecm_label.setText(f"ECM: {ecm:.4f}")
+            self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
+            self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
+            self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
             self.r2_label.show()
             self.ecm_label.show()
             self.formula_label.show()
@@ -312,7 +361,7 @@ class MainWindow(ps.QMainWindow):
             # Crear un QLabel para mostrar la gráfica
             self.graph_label = ps.QLabel(self)
             self.graph_label.setPixmap(pixmap)
-            self.graph_label.setAlignment(ps.Qt.AlignmentFlag.AlignCenter)  # Centra la imagen en el QLabel
+            #self.graph_label.setAlignment(ps.QAlignmentFlag.AlignCenter)  # Centra la imagen en el QLabel
 
             # Mensaje de éxito
             ps.QMessageBox.information(self, "Éxito", "El modelo de regresión se ha creado correctamente.")
@@ -362,11 +411,12 @@ class MainWindow(ps.QMainWindow):
         # Verifica si la descripción está vacía
         if not self.model_description:
             ps.QMessageBox.information(self, "Aviso", "La descripción está vacía, pero el modelo se guardará de todas formas.")
-        else:
-            ps.QMessageBox.information(self, "Éxito", "El modelo y la descripción se han guardado correctamente.")
-
+        
+        file_path, _ = ps.QFileDialog.getSaveFileName(self, "Guardar Archivo", "", "Accepted Files (*.joblib)")
+        self._manager.save_model_with_description(self._modelo, self.model_description, self._metricas, self._formula, file_path)
         # Aquí podrías incluir la lógica para guardar el modelo y la descripción juntos
         print("Descripción del modelo:", self.model_description)
+        ps.QMessageBox.information(self, "Éxito", "El modelo y la descripción se han guardado correctamente.")
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)

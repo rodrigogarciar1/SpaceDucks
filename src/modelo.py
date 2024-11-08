@@ -46,4 +46,4 @@ def entrenar_y_graficar_modelo(data, columnas_entrada, columna_salida):
         plt.grid()
         plt.show()
 
-    return formula, r2, ecm
+    return formula, r2, ecm, modelo
