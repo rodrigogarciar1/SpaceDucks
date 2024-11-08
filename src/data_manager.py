@@ -138,7 +138,7 @@ class DataManager():
         self._depuration(gui, column_data, selected_column, strategy)
         self._depuration(gui, column_data, other_column, strategy)
     
-        return column_data[entry_column], column_data[target_column]
+        return column_data, entry_column, target_column
     
 
     def _depuration(self, gui, column_data, column, strategy):
