@@ -152,7 +152,7 @@ class DataManager():
                         elif strategy == "Rellenar con mediana":
                             column_data[column] = column_data[column].fillna(column_data[column].median())
                         elif strategy == "Rellenar con valor constante":
-                            constant_value = self._constant_value_input.text()
+                            constant_value = gui._constant_value_input.text()
                             if constant_value == "":
                                 ps.QMessageBox.warning(gui, "Error", "Por favor, introduce un valor constante.")
                                 return

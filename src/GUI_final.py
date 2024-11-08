@@ -197,9 +197,7 @@ class MainWindow(ps.QMainWindow):
             self._constant_value_input.show()
         else:
             self._constant_value_input.hide()
-
-
-            
+          
 
     def apply_missing_data_strategy(self):
         """Aplica la estrategia seleccionada para manejar los valores inexistentes."""
@@ -221,17 +219,21 @@ class MainWindow(ps.QMainWindow):
     def data_reader(self):
         if self._file_name.endswith(".joblib"):
             try:
-                self._modelo, self.model_description, self._metricas, self._formula = self._manager.load_model_with_description(self._file_name)
-                
+                self._modelo, description, self._metricas, self._formula = self._manager.load_model_with_description(self._file_name)
+                fn = self._file_name
+                self.clear_data()
                 self.b1.hide()
                 self._table_widget.hide()
 
+                self._text_box.setText(fn)
                 self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
                 self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
                 self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
                 self.r2_label.show()
                 self.ecm_label.show()
                 self.formula_label.show()
+                self._description_edit.setText(description)
+                self._description_edit.show()
 
                 ps.QMessageBox.information(self, "Éxito", "El archivo se ha cargado correctamente.")
 
