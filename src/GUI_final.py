@@ -1,13 +1,7 @@
 import sys
-import io
 import PySide6.QtWidgets as ps
-from PySide6.QtGui import QPixmap  # Importa QPixmap para manejar imágenes
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo
-from resultados import ResultadosWidget  # Importa la clase de resultados
-import matplotlib.pyplot as plt
-from PySide6.QtGui import QPixmap
-from PySide6.QtCore import Qt
 import pyqtgraph as pg
 
 class MainWindow(ps.QMainWindow):
@@ -389,7 +383,11 @@ class MainWindow(ps.QMainWindow):
         self._graph.hide()
         
         if self._entry_column.currentIndex() == 0 or self._target_column.currentIndex() == 0:
-            ps.QMessageBox.warning(self, "Error", "Selecciona valores válidos")
+            msg = str("La columna " + "de entrada "*(self._entry_column.currentIndex()==0) 
+            + "y la "*(self._entry_column.currentIndex()==self._target_column.currentIndex()) + "de salida "*(self._target_column.currentIndex()==0)+
+            "no pertenece/n al archivo instertado")
+
+            ps.QMessageBox.warning(self, "Error", msg)
             return
         if self._entry_column.currentIndex() == self._target_column.currentIndex():
             ps.QMessageBox.warning(self, "Error", "La columnas no pueden ser la misma")
@@ -427,6 +425,7 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.information(self, "Aviso", "La descripción está vacía, pero el modelo se guardará de todas formas.")
         
         file_path, _ = ps.QFileDialog.getSaveFileName(self, "Guardar Archivo", "", "Accepted Files (*.joblib)")
+        
         self._manager.save_model_with_description(self._modelo, self.model_description, self._metricas, self._formula, file_path)
         # Aquí podrías incluir la lógica para guardar el modelo y la descripción juntos
         print("Descripción del modelo:", self.model_description)

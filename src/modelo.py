@@ -1,6 +1,5 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
-import matplotlib.pyplot as plt
 
 def entrenar_modelo(data, columnas_entrada, columna_salida):
     """

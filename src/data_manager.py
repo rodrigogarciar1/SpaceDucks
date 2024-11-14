@@ -1,12 +1,7 @@
 import sqlite3 as sq
 import pandas as pd
-from csv_reader import ProcesadorCSV
 import PySide6.QtWidgets as ps
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
 import joblib
-from sklearn.metrics import mean_squared_error, r2_score
-import matplotlib.pyplot as plt
 
 class DataManager():
     def __init__(self) -> None:
@@ -43,17 +38,18 @@ class DataManager():
         print(self.data.head())
 
     def read_csv(self, file):
-        a = open(file)
-        csv_data = ProcesadorCSV(a.read())
-        csv_data.procesar_csv()
-        self.data = pd.DataFrame(
-            csv_data.matriz_procesada[1:], columns=csv_data.matriz_procesada[0])
+        self.data = pd.read_csv(file)  # Carga todas las hojas
+        print(f"Archivo '{file}' cargado exitosamente.")
+
+        # Verifica si hay hojas en el archivo
+        if len(self.data)==0:
+            print("La tabla no existe o el archivo está vacío.")
+            return
+
 
         # Muestra las primeras filas del DataFrame
         print(f"Mostrando las primeras filas de la hoja:")
         print(self.data.head())
-
-        del csv_data
 
     def read_db(self, file):
         # Conexión a la base de datos SQLite
