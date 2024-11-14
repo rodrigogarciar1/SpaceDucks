@@ -9,14 +9,16 @@ Software Engineering Project
 2. Getting Started
    - System Requirements
    - Running the Application
-3. Application Features
-   - Layout and Navigation
-   - Importing and Selecting Data
-   - Creating Linear Regression Models
+3. User Interface
+   - Main Interface
+   - Variable Selection
+   - Model Creation
+   - Save and Load Models
+4. Usage Instructions
+   - Loading a File
+   - Selecting Variables
+   - Model Creation and Prediction
    - Saving and Loading Models
-4. Data Management
-   - Uploading Data Files
-   - Managing Large Datasets
 5. Model Predictions
    - Selecting Data for Regression
    - Building and Visualizing Models
