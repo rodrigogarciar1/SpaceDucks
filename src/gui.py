@@ -1,7 +1,7 @@
 import sys
 import PySide6.QtWidgets as ps
-from data_manager import DataManager   # Importa el módulo data_manager correctamente
-from modelo import entrenar_modelo
+from data_manager import DataManager   # Se ocupa de toda la gestión de datos, guardado y cargado de archivos
+from modelo import entrenar_modelo      # Se ocupa de todo lo relacionado con el modelo
 import pyqtgraph as pg
 
 class MainWindow(ps.QMainWindow):
@@ -14,8 +14,11 @@ class MainWindow(ps.QMainWindow):
         self._formula = ""
 
     def initUI(self):
-        self.setWindowTitle("Análisis de Regresión Lineal")
-        self.setGeometry(100, 100, 900, 500)  # Set initial window size
+        #Título
+        self.setWindowTitle("SpaceDucks")
+        self.statusBar = ps.QStatusBar()
+        self.setStatusBar(self.statusBar)        
+        self.setGeometry(100, 100, 1200, 500)  # Set initial window size
 
         # Create a main scroll area that covers the entire window
         main_scroll_area = ps.QScrollArea()
@@ -25,7 +28,8 @@ class MainWindow(ps.QMainWindow):
         # Create a central widget to hold all content
         central_widget = ps.QWidget()
         layout = ps.QVBoxLayout(central_widget)
-            # Estilo general
+        
+        # Estilo general
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f0e68c; /* Amarillo pastel */
@@ -59,22 +63,22 @@ class MainWindow(ps.QMainWindow):
             }
         """)
         layout_h = ps.QHBoxLayout()
+
         # Botón para seleccionar archivo
-        self.b1 = ps.QPushButton(text="Añadir archivos")
+        self.b1 = ps.QPushButton(text="Add file")
         self.b1.clicked.connect(self.add_file)
         layout_h.addWidget(self.b1)
 
-        self.model_button = ps.QPushButton(text="Añadir modelo")
+        # Botón de agregar modelo
+        self.model_button = ps.QPushButton(text="Add model")
         self.model_button.clicked.connect(self.add_model)
         layout_h.addWidget(self.model_button)
-
         layout.addLayout(layout_h)
 
         # Botón para visualizar archivo
-        self.b2 = ps.QPushButton(text="Visualizar archivo")
+        self.b2 = ps.QPushButton(text="Visualise file")
         self.b2.clicked.connect(self.data_reader)
         layout.addWidget(self.b2)
-
         layout_h = ps.QHBoxLayout()
         
         # Label para mostrar el nombre del archivo seleccionado
@@ -83,15 +87,14 @@ class MainWindow(ps.QMainWindow):
         layout_h.addWidget(self._text_box)
 
         # Botón para eliminar archivo
-        self.b3 = ps.QPushButton(text="Eliminar archivo")
+        self.b3 = ps.QPushButton(text="Delete file")
         self.b3.clicked.connect(self.clear_data)
         layout_h.addWidget(self.b3)
         layout.addLayout(layout_h)
 
-            # Tabla para mostrar los datos del DataFrame
+        # Tabla para mostrar los datos del DataFrame
         self._table_widget = ps.QTableWidget()
         layout.addWidget(self._table_widget)
-
         linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
 
         # Dropdown para la selección de la columna de datos
@@ -106,7 +109,7 @@ class MainWindow(ps.QMainWindow):
         linear_menu.addWidget(self._target_column)
 
         #Botón para procesar el modelo de regresión lineal
-        self._accept_button = ps.QPushButton(text="Procesar")
+        self._accept_button = ps.QPushButton(text="Process")
         self._accept_button.setStyleSheet("display = inline-box")
         self._accept_button.hide()
         self._accept_button.clicked.connect(self.process_data)
@@ -117,7 +120,7 @@ class MainWindow(ps.QMainWindow):
         missing_data_menu = ps.QHBoxLayout()
 
         self._missing_options = ps.QComboBox()
-        self._missing_options.addItems(["Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
+        self._missing_options.addItems(["Delete rows", "Fill with mean", "Fill with median", "Fill with constant value"])
         self._missing_options.currentIndexChanged.connect(self.missing_option_changed)
         
         self._missing_options.hide()  # Deshabilitado inicialmente
@@ -125,26 +128,29 @@ class MainWindow(ps.QMainWindow):
         missing_data_menu.addWidget(self._missing_options)
 
         self._constant_value_input = ps.QLineEdit()
-        self._constant_value_input.setPlaceholderText("Introduce un valor")
+        self._constant_value_input.setPlaceholderText("Input value")
         self._constant_value_input.hide()  #Escondido inicialmente, solo aparece si se selecciona "Rellenar con valor constante"
         missing_data_menu.addWidget(self._constant_value_input)
 
-        self._apply_button = ps.QPushButton("Aplicar")
+        # Botón que lleva a cabo la estrategia elegida
+        self._apply_button = ps.QPushButton("Apply")
         self._apply_button.hide()  #Deshabilitado inicialmente
         self._apply_button.clicked.connect(self.apply_missing_data_strategy)
         missing_data_menu.addWidget(self._apply_button)
 
         layout.addLayout(missing_data_menu)
 
+        # Gráfica del modelo
         self._graph = pg.PlotWidget()
         self._graph.setStyleSheet("min-height:400px")
         self._graph.hide()
         layout.addWidget(self._graph)
 
         #Etiqueta para mostrar la fórmula de regresión
-        self.formula_label = ps.QLabel("Fórmula de Regresión: ")
+        self.formula_label = ps.QLabel("Regression formula: ")
         layout.addWidget(self.formula_label)
         self.formula_label.hide()
+
         #Etiquetas para mostrar R² y ECM
         self.r2_label = ps.QLabel("R²: ")
         self.ecm_label = ps.QLabel("ECM: ")
@@ -153,27 +159,25 @@ class MainWindow(ps.QMainWindow):
         layout.addWidget(self.r2_label)
         layout.addWidget(self.ecm_label)
         
-        self.setWindowTitle("Análisis de Regresión Lineal")
-        self.statusBar = ps.QStatusBar()
-        self.setStatusBar(self.statusBar)
+
+        
         
 
         # Área de texto para la descripción del modelo
         self._description_edit = ps.QTextEdit()
-        self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
+        self._description_edit.setPlaceholderText("Model description (opcional)")
         self._description_edit.setStyleSheet("color: black")
         self._description_edit.hide()
         layout.addWidget(self._description_edit)
-          # Botón para guardar el modelo (incluye descripción)
-        self.save_button = ps.QPushButton("Guardar Modelo")
+
+        # Botón para guardar el modelo (incluye descripción)
+        self.save_button = ps.QPushButton("Save model")
         self.save_button.clicked.connect(self.save_model)
         self.save_button.hide()
         layout.addWidget(self.save_button)
         
-    
-        # Layout principal
-        layout = ps.QVBoxLayout()
-
+        
+        ### NO TOCAR!!!!!!! ###
         # Set the central widget as the scroll area's widget
         main_scroll_area.setWidget(central_widget)
 
@@ -187,7 +191,7 @@ class MainWindow(ps.QMainWindow):
     
     def missing_option_changed(self):
         """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
-        if self._missing_options.currentText() == "Rellenar con valor constante":
+        if self._missing_options.currentText() == "Fill with constant value":
             self._constant_value_input.show()
         else:
             self._constant_value_input.hide()
@@ -220,7 +224,7 @@ class MainWindow(ps.QMainWindow):
                 self._table_widget.hide()
 
                 self._text_box.setText(fn)
-                self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
+                self.formula_label.setText(f"Regression formula: {self._formula}")
                 self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
                 self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
                 self.r2_label.show()
@@ -336,6 +340,9 @@ class MainWindow(ps.QMainWindow):
     def plot_regression(self, columnas_entrada, columna_salida, *args):
         """Llama a la función `entrenar_y_graficar_modelo` y muestra los resultados en la interfaz."""
         try:
+            #leyenda de la gráfica
+            legend = self._graph.addLegend()
+
             if len(args) == 0:
             # Llamada a la función para entrenar el modelo y obtener la fórmula y métricas
                 data = self._manager.data
@@ -344,7 +351,7 @@ class MainWindow(ps.QMainWindow):
 
             self._formula, self._metricas[0], self._metricas[1], self._modelo, pred = entrenar_modelo(data, [columnas_entrada], columna_salida)
             # Actualiza las etiquetas con la fórmula y métricas
-            self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
+            self.formula_label.setText(f"Regression formula: {self._formula}")
             self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
             self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
             self._graph.show()
@@ -364,7 +371,11 @@ class MainWindow(ps.QMainWindow):
 
             # Mensaje de éxito
             ps.QMessageBox.information(self, "Éxito", "El modelo de regresión se ha creado correctamente.")
-        
+
+            legend.addItem(pg.PlotDataItem(self._manager.data[columnas_entrada], self._manager.data[columna_salida]), "Datos reales")
+            legend.addItem(pg.PlotDataItem(self._manager.data[columnas_entrada], pred), "Predicciones")
+
+            
         except Exception as e:
             # Muestra un mensaje de error si algo falla
             ps.QMessageBox.critical(self, "Error", f"Ocurrió un error al crear el modelo: {str(e)}")
@@ -399,6 +410,8 @@ class MainWindow(ps.QMainWindow):
 
         valid, message = self._manager.count_nan(entry_column, target_column)
 
+        
+
         if not valid:
             self._missing_options.show()
             self._apply_button.show()
@@ -424,7 +437,7 @@ class MainWindow(ps.QMainWindow):
         if not self.model_description:
             ps.QMessageBox.information(self, "Aviso", "La descripción está vacía, pero el modelo se guardará de todas formas.")
         
-        file_path, _ = ps.QFileDialog.getSaveFileName(self, "Guardar Archivo", "", "Accepted Files (*.joblib)")
+        file_path, _ = ps.QFileDialog.getSaveFileName(self, "Save file", "", "Accepted Files (*.joblib)")
         
         self._manager.save_model_with_description(self._modelo, self.model_description, self._metricas, self._formula, file_path)
         # Aquí podrías incluir la lógica para guardar el modelo y la descripción juntos
