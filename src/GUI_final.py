@@ -13,6 +13,24 @@ class MainWindow(ps.QMainWindow):
         self._metricas = [0, 0]
         self._formula = ""
 
+    def button(self, button_text, function, hidden = False):
+        button = ps.QPushButton(text = button_text)
+        button.clicked.connect(function)
+        if hidden:
+            button.hide()
+        return button
+
+    def add_to_layout(self, layout, *args):
+        if len(args) == 0:
+            return ValueError("There must be at least one object to add to the layout")
+        
+        for element in args:
+            if type(element) not in [ps.QVBoxLayout, ps.QHBoxLayout]:
+                layout.addWidget(element)
+            else:
+                layout.addLayout(element)
+        return layout
+
     def initUI(self):
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.setGeometry(100, 100, 900, 500)  # Set initial window size
@@ -60,19 +78,16 @@ class MainWindow(ps.QMainWindow):
         """)
         layout_h = ps.QHBoxLayout()
         # Botón para seleccionar archivo
-        self.b1 = ps.QPushButton(text="Añadir archivos")
-        self.b1.clicked.connect(self.add_file)
-        layout_h.addWidget(self.b1)
-
-        self.model_button = ps.QPushButton(text="Añadir modelo")
-        self.model_button.clicked.connect(self.add_model)
-        layout_h.addWidget(self.model_button)
-
+        self.b1 = self.button("Añadir archivos", self.add_file)
+        self.model_button = self.button("Añadir modelo", self.add_model)
+        
+        self.add_to_layout(layout_h, self.b1, self.model_button)
+        
         layout.addLayout(layout_h)
 
         # Botón para visualizar archivo
-        self.b2 = ps.QPushButton(text="Visualizar archivo")
-        self.b2.clicked.connect(self.data_reader)
+        self.b2 = self.button("Visualizar archivo", self.data_reader)
+
         layout.addWidget(self.b2)
 
         layout_h = ps.QHBoxLayout()
