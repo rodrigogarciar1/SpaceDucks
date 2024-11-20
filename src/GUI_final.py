@@ -4,9 +4,6 @@ from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo
 import pyqtgraph as pg
-import pandas as pd
-
-
 
 class PandasModel(QAbstractTableModel):
     def __init__(self, dataframe):
@@ -105,14 +102,14 @@ class MainWindow(ps.QMainWindow):
                 font-family: 'Courier New'; /* Fuente retro */
             }
         """)
-        layout_h = ps.QHBoxLayout()
+        layout_h1 = ps.QHBoxLayout()
         # Botón para seleccionar archivo
         self.b1 = self.button("Añadir archivos", self.add_file)
         self.model_button = self.button("Añadir modelo", self.add_model)
         
-        self.add_to_layout(layout_h, self.b1, self.model_button)
+        self.add_to_layout(layout_h1, self.b1, self.model_button)
         
-        layout.addLayout(layout_h)
+        layout.addLayout(layout_h1)
 
         # Botón para visualizar archivo
         self.b2 = self.button("Visualizar archivo", self.data_reader)
@@ -124,12 +121,12 @@ class MainWindow(ps.QMainWindow):
         # Label para mostrar el nombre del archivo seleccionado
         self._text_box = ps.QLabel("")
         self._text_box.setStyleSheet("background-color: white; color: blue; max-height: 25px; max-width: 900px; padding: 5px")
-        layout_h.addWidget(self._text_box)
 
         # Botón para eliminar archivo
-        self.b3 = ps.QPushButton(text="Eliminar archivo")
-        self.b3.clicked.connect(self.clear_data)
-        layout_h.addWidget(self.b3)
+        self.b3 = self.button("Eliminar archivo", self.clear_data)
+
+        self.add_to_layout(layout_h, self._text_box, self.b3)
+
         layout.addLayout(layout_h)
 
             # Tabla para mostrar los datos del DataFrame
@@ -141,20 +138,17 @@ class MainWindow(ps.QMainWindow):
         # Dropdown para la selección de la columna de datos
         self._entry_column = ps.QComboBox()
         self._entry_column.hide()  # Ocultar inicialmente
-        linear_menu.addWidget(self._entry_column)
 
         # Dropdown para la selección de la columna objetivo
         self._target_column = ps.QComboBox()
         self._target_column.hide()
-        
-        linear_menu.addWidget(self._target_column)
 
         #Botón para procesar el modelo de regresión lineal
-        self._accept_button = ps.QPushButton(text="Procesar")
+        self._accept_button = self.button("Procesar", self.process_data, hidden=True)
         self._accept_button.setStyleSheet("display = inline-box")
-        self._accept_button.hide()
-        self._accept_button.clicked.connect(self.process_data)
-        linear_menu.addWidget(self._accept_button)
+        
+        self.add_to_layout(linear_menu, self._entry_column, self._target_column, self._accept_button)
+
         layout.addLayout(linear_menu)
         
         #Opciones de manejo de valores inexistentes
@@ -163,39 +157,31 @@ class MainWindow(ps.QMainWindow):
         self._missing_options = ps.QComboBox()
         self._missing_options.addItems(["Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
         self._missing_options.currentIndexChanged.connect(self.missing_option_changed)
-        
         self._missing_options.hide()  # Deshabilitado inicialmente
-
-        missing_data_menu.addWidget(self._missing_options)
 
         self._constant_value_input = ps.QLineEdit()
         self._constant_value_input.setPlaceholderText("Introduce un valor")
         self._constant_value_input.hide()  #Escondido inicialmente, solo aparece si se selecciona "Rellenar con valor constante"
-        missing_data_menu.addWidget(self._constant_value_input)
 
-        self._apply_button = ps.QPushButton("Aplicar")
-        self._apply_button.hide()  #Deshabilitado inicialmente
-        self._apply_button.clicked.connect(self.apply_missing_data_strategy)
-        missing_data_menu.addWidget(self._apply_button)
+        self._apply_button = self.button("Aplicar", self.apply_missing_data_strategy, hidden=True)
+
+        self.add_to_layout(missing_data_menu, self._missing_options, self._constant_value_input, self._apply_button)
 
         layout.addLayout(missing_data_menu)
 
         self._graph = pg.PlotWidget()
         self._graph.setStyleSheet("min-height:400px")
         self._graph.hide()
-        layout.addWidget(self._graph)
 
         #Etiqueta para mostrar la fórmula de regresión
         self.formula_label = ps.QLabel("Fórmula de Regresión: ")
-        layout.addWidget(self.formula_label)
         self.formula_label.hide()
+
         #Etiquetas para mostrar R² y ECM
         self.r2_label = ps.QLabel("R²: ")
         self.ecm_label = ps.QLabel("ECM: ")
         self.ecm_label.hide()
         self.r2_label.hide()
-        layout.addWidget(self.r2_label)
-        layout.addWidget(self.ecm_label)
         
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.statusBar = ps.QStatusBar()
@@ -207,14 +193,12 @@ class MainWindow(ps.QMainWindow):
         self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
         self._description_edit.setStyleSheet("color: black")
         self._description_edit.hide()
-        layout.addWidget(self._description_edit)
           # Botón para guardar el modelo (incluye descripción)
         self.save_button = ps.QPushButton("Guardar Modelo")
         self.save_button.clicked.connect(self.save_model)
         self.save_button.hide()
-        layout.addWidget(self.save_button)
         
-    
+        self.add_to_layout(layout, self._graph, self.formula_label, self.r2_label, self.ecm_label, self._description_edit, self.save_button)
         # Layout principal
         layout = ps.QVBoxLayout()
 
@@ -225,7 +209,11 @@ class MainWindow(ps.QMainWindow):
         self.setCentralWidget(main_scroll_area)
 
     def add_model(self):
-        self._file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
+        file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
+        if len(file_name)>0:
+            self._file_name = file_name
+        else:
+            return
         self._text_box.setText(self._file_name)
         
     
@@ -251,7 +239,11 @@ class MainWindow(ps.QMainWindow):
         self._description_edit.show()
 
     def add_file(self):
-        self._file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
+        file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
+        if len(file_name)>0:
+            self._file_name = file_name
+        else:
+            return
         self._text_box.setText(self._file_name)
 
     def data_reader(self):
