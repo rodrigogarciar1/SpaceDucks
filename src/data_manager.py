@@ -25,7 +25,7 @@ class DataManager():
         print(f"Archivo '{file}' cargado exitosamente.")
 
         # Verifica si hay hojas en el archivo
-        if not data:
+        if len(data)==0:
             print("La tabla no existe o el archivo está vacío.")
             return
 

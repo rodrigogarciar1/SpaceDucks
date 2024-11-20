@@ -1,13 +1,42 @@
 import sys
 import PySide6.QtWidgets as ps
+from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo
 import pyqtgraph as pg
+import pandas as pd
+
+
+
+class PandasModel(QAbstractTableModel):
+    def __init__(self, dataframe):
+        super().__init__()
+        self._dataframe = dataframe
+
+    def rowCount(self, parent=None):
+        return self._dataframe.shape[0]
+
+    def columnCount(self, parent=None):
+        return self._dataframe.shape[1]
+
+    def data(self, index, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            return str(self._dataframe.iat[index.row(), index.column()])
+        return None
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return self._dataframe.columns[section]
+            else:
+                return section + 1  # Row numbers starting from 1
+        return None
+    
 
 class MainWindow(ps.QMainWindow):
     def __init__(self):
         super().__init__()
-        self._file_name = None
+        self._file_name = ""
         self.initUI()
         self._manager = DataManager()
         self._metricas = [0, 0]
@@ -104,7 +133,7 @@ class MainWindow(ps.QMainWindow):
         layout.addLayout(layout_h)
 
             # Tabla para mostrar los datos del DataFrame
-        self._table_widget = ps.QTableWidget()
+        self._table_widget = ps.QTableView()
         layout.addWidget(self._table_widget)
 
         linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
@@ -273,7 +302,7 @@ class MainWindow(ps.QMainWindow):
                         self.clear_data()  #Limpiar datos en caso de archivo vacío
                         return
                 
-                    self.show_data(self._manager.data)  #Mostrar datos en QTextEdit
+                    self.show_data()  #Mostrar datos en QTextEdit
                     self.set_dropdown_content(self._manager.data.keys())
                     self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
 
@@ -295,16 +324,11 @@ class MainWindow(ps.QMainWindow):
             except Exception as e:
                 ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
 
-    def show_data(self, data):
+    def show_data(self):
         """Muestra los datos en el QTableWidget."""
-        self._table_widget.setRowCount(data.shape[0])
-        self._table_widget.setColumnCount(data.shape[1])
-        self._table_widget.setHorizontalHeaderLabels(data.columns)
+        self.model = PandasModel(self._manager.data)
+        self._table_widget.setModel(self.model)
 
-        for i in range(data.shape[0]):
-            for j in range(data.shape[1]):
-                item = ps.QTableWidgetItem(str(data.iat[i, j]))
-                self._table_widget.setItem(i, j, item)
 
     #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
     def clear_data(self):
@@ -313,8 +337,8 @@ class MainWindow(ps.QMainWindow):
         else:
 
             self._text_box.clear()
-            self._file_name = None
-            self._table_widget.clear()
+            self._file_name = ""
+            self._table_widget.setModel(None)
 
             self._entry_column.hide() 
             self._entry_column.clear()
