@@ -393,6 +393,9 @@ class MainWindow(ps.QMainWindow):
             pen = pg.mkPen(color=(255, 0, 0))
             self._graph.plot(data[columnas_entrada], pred, pen = pen)
 
+            self._graph.plotItem.autoRange()
+
+
             # Mensaje de éxito
             ps.QMessageBox.information(self, "Éxito", "El modelo de regresión se ha creado correctamente.")
         
