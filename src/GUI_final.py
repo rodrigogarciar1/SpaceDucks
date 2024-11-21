@@ -179,6 +179,7 @@ class MainWindow(ps.QMainWindow):
 
     def add_model(self):
         self.b2.show()
+        self.b1.show()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
         if len(file_name)>0:
             self._file_name = file_name
@@ -207,9 +208,11 @@ class MainWindow(ps.QMainWindow):
 
         self.save_button.show()
         self._description_edit.show()
+        
 
     def add_file(self):
         self.b2.show()
+        self._graph.hide()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
         if len(file_name)>0:
             self._file_name = file_name
@@ -223,7 +226,6 @@ class MainWindow(ps.QMainWindow):
                 self._modelo, description, self._metricas, self._formula = self._manager.load_model_with_description(self._file_name)
                 fn = self._file_name
                 self.clear_data()
-                self.b1.hide()
                 self._table_widget.hide()
 
                 self._text_box.setText(fn)
@@ -350,6 +352,14 @@ class MainWindow(ps.QMainWindow):
             self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
             self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
             self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
+
+            self._missing_options.hide()
+            self._entry_column.hide()
+            self._target_column.hide()
+            self._table_widget.hide()
+            self._accept_button.hide()
+            self._apply_button.hide()
+
             self._graph.show()
             self._graph.clear()
             self.r2_label.show()
