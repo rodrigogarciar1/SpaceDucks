@@ -70,38 +70,7 @@ class MainWindow(ps.QMainWindow):
         central_widget = ps.QWidget()
         layout = ps.QVBoxLayout(central_widget)
             # Estilo general
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f0e68c; /* Amarillo pastel */
-                font-family: 'Courier New'; /* Fuente retro */
-            }
-            QLabel {
-                font-size: 20px;
-                color: #2f4f4f; /* Verde oscuro */
-                padding: 10px;
-                border: 2px solid #8b4513; /* Marrón */
-                border-radius: 10px; /* Bordes redondeados */
-                background-color: #fff8dc; /* Fondo color crema */
-            }
-            QPushButton {
-                background-color: #8b0000; /* Rojo oscuro */
-                color: #ffffff; /* Texto blanco */
-                font-size: 18px;
-                padding: 10px;
-                border: 2px solid #ff6347; /* Tomate */
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #ff6347; /* Tomate más brillante */
-                border-color: #ffffff; /* Cambio de color del borde */
-            }
-            QTextEdit {
-                border: 2px solid #cd853f; /* Marrón claro */
-                border-radius: 5px;
-                background-color: #fffaf0; /* Fondo blanco antiguo */
-                font-family: 'Courier New'; /* Fuente retro */
-            }
-        """)
+        
         layout_h1 = ps.QHBoxLayout()
         # Botón para seleccionar archivo
         self.b1 = self.button("Añadir archivos", self.add_file)
@@ -194,10 +163,10 @@ class MainWindow(ps.QMainWindow):
         self._description_edit.setStyleSheet("color: black")
         self._description_edit.hide()
           # Botón para guardar el modelo (incluye descripción)
-        self.save_button = ps.QPushButton("Guardar Modelo")
-        self.save_button.clicked.connect(self.save_model)
-        self.save_button.hide()
-        
+    
+        self.save_button = self.button("Guardar Modelo", self.save_model, hidden=True)
+
+         
         self.add_to_layout(layout, self._graph, self.formula_label, self.r2_label, self.ecm_label, self._description_edit, self.save_button)
         # Layout principal
         layout = ps.QVBoxLayout()
@@ -209,6 +178,7 @@ class MainWindow(ps.QMainWindow):
         self.setCentralWidget(main_scroll_area)
 
     def add_model(self):
+        self.b2.show()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
         if len(file_name)>0:
             self._file_name = file_name
@@ -239,6 +209,7 @@ class MainWindow(ps.QMainWindow):
         self._description_edit.show()
 
     def add_file(self):
+        self.b2.show()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
         if len(file_name)>0:
             self._file_name = file_name
@@ -264,7 +235,7 @@ class MainWindow(ps.QMainWindow):
                 self.formula_label.show()
                 self._description_edit.setText(description)
                 self._description_edit.show()
-
+                self.b2.hide()
                 ps.QMessageBox.information(self, "Éxito", "El archivo se ha cargado correctamente.")
 
             except IndexError:
@@ -297,7 +268,7 @@ class MainWindow(ps.QMainWindow):
                     self.show_data()  #Mostrar datos en QTextEdit
                     self.set_dropdown_content(self._manager.data.keys())
                     self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
-
+                    self.b2.hide()
                 else:
                     print("No se ha seleccionado ningún archivo.")
                     ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
@@ -349,6 +320,7 @@ class MainWindow(ps.QMainWindow):
             self.formula_label.hide()
             self._graph.hide()
 
+            self.b2.hide()
 
     def set_dropdown_content(self, contents):
         self._entry_column.addItem("-- Columna de entrada --")
@@ -422,6 +394,7 @@ class MainWindow(ps.QMainWindow):
             "no pertenece/n al archivo instertado")
 
             ps.QMessageBox.warning(self, "Error", msg)
+
             return
         if self._entry_column.currentIndex() == self._target_column.currentIndex():
             ps.QMessageBox.warning(self, "Error", "La columnas no pueden ser la misma")
@@ -430,7 +403,7 @@ class MainWindow(ps.QMainWindow):
         
         entry_column = self._entry_column.currentText() #Obtener los nombres de las columnas seleccionadas
         target_column = self._target_column.currentText()
-
+        
         valid, message = self._manager.count_nan(entry_column, target_column)
 
         if not valid:
@@ -447,6 +420,10 @@ class MainWindow(ps.QMainWindow):
          #Muestra el botón para guardar el modelo y el campo de descripción
         self.save_button.show()
         self._description_edit.show()
+        self._table_widget.hide()
+        self._entry_column.hide()  
+        self._target_column.hide()
+        self._accept_button.hide()
 
 
     def save_model(self):
@@ -470,5 +447,4 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     app.exec()
-
 
