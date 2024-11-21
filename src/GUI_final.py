@@ -179,7 +179,7 @@ class MainWindow(ps.QMainWindow):
 
     def add_model(self):
         self.b2.show()
-        self.b1.show()
+        self.b1.hide()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
         if len(file_name)>0:
             self._file_name = file_name
@@ -267,7 +267,7 @@ class MainWindow(ps.QMainWindow):
                         self.clear_data()  #Limpiar datos en caso de archivo vacío
                         return
                 
-                    self.show_data()  #Mostrar datos en QTextEdit
+                    self._table_widget.setModel(PandasModel(self._manager.data))  #Mostrar datos en QTextEdit
                     self.set_dropdown_content(self._manager.data.keys())
                     self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
                     self.b2.hide()
@@ -288,11 +288,6 @@ class MainWindow(ps.QMainWindow):
                 ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
             except Exception as e:
                 ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
-
-    def show_data(self):
-        """Muestra los datos en el QTableWidget."""
-        self.model = PandasModel(self._manager.data)
-        self._table_widget.setModel(self.model)
 
 
     #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
