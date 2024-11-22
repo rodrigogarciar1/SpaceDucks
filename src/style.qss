@@ -1,0 +1,144 @@
+
+QMainWindow {
+    background-color: #fbfff2;
+}
+
+QPushButton {
+    background-color: #3066BE;
+    color: #fbfff2;
+    border: 2px solid #b4c5e4;
+    padding: 10px;
+    border-radius: 5px;   
+}
+
+QPushButton:hover {
+    background-color: #b4c5e4;
+}
+
+QPushButton:disabled {
+    background-color: #090c9b; /* Gray background for disabled state */
+    color: #D3D3D3; /* Light gray text for disabled state */
+}
+
+QPushButton:disabled:hover {
+}
+
+QLabel{
+    border: 3px solid #3C3744;
+    border-radius: 5px;
+    color: #3C3744;
+}
+
+
+#logo{
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    max-height: 30px;
+    qproperty-alignment: 'AlignCenter';
+}
+
+#steps{
+    qproperty-alignment: 'AlignCenter';
+    text-align: center;
+    font-size: 16px;
+    color: black;
+    background-color: lightgray;
+    max-width: 80px;
+    min-width: 80px;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-bottom :0px;
+    border:0px; 
+    color: white;
+    border-radius: 0px;
+}
+
+
+#next {
+    max-width:75px;
+    margin-right:0px;
+}
+
+#prev {
+    width:75px;
+    margin-left:0px;
+}
+
+QTextEdit {
+    border: 3px solid #3C3744;
+    border-radius: 5px;
+    color: #F2FFF6;
+    background-color: #3C3744;
+}
+
+/* Style for QTableView */
+QTableView {
+    background-color: #f9f9f9; /* Light background color */
+    color: #000000;  /* Text color */
+    border: 1px solid #d0d0d0;  /* Border for the table */
+    font-size: 14px;  /* Font size */
+    selection-background-color: #b4c5e4;  /* Highlight color when selecting rows */
+    selection-color: white;  /* Text color for selected rows */
+    gridline-color: #d0d0d0;  /* Gridline color */
+    padding: 5px;  /* Add some padding inside the table */
+}
+
+/* Style for QTableView Header */
+QTableView::horizontalHeader, QTableView::verticalHeader {
+    background-color: #3066BE; /* Dark blue background for the header */
+    color: white;  /* Text color */
+    font-size: 16px;  /* Font size for header text */
+    padding: 5px;  /* Padding around header text */
+    border: none;  /* Remove border from header */
+}
+
+QTableView::item {
+    padding: 8px;  /* Padding inside cells */
+}
+
+/* Style for QComboBox */
+QComboBox {
+    background-color: #ffffff;  /* White background */
+    color: black;  /* Text color */
+    border: 1px solid #b4c5e4;  /* Light blue border */
+    padding: 5px 10px;  /* Padding inside the combo box */
+    font-size: 16px;  /* Font size */
+    min-width: 150px;  /* Minimum width for combo box */
+    border-radius: 5px;  /* Rounded corners */
+}
+
+QComboBox::drop-down {
+    background-color: #3066BE;  /* Dropdown background color */
+    border: none;  /* Remove border from dropdown */
+    color: white;  /* Text color in dropdown */
+}
+
+QComboBox QAbstractItemView {
+    background-color: #f9f9f9;  /* Background color of the dropdown items */
+    color: black;  /* Text color of the dropdown items */
+    border: 1px solid #b4c5e4;  /* Border for dropdown list */
+    padding: 5px;
+    selection-background-color: #b4c5e4;  /* Selection color in dropdown */
+    selection-color: white;  /* Text color for selected item */
+}
+
+QComboBox:editable {
+    background-color: #ffffff;  /* Editable area background */
+}
+
+QComboBox:disabled {
+    background-color: lightgray;
+}
+
+QMessageBox {
+    background: #FCFFF2;
+}
+
+QMessageBox QLabel{
+   border: 0px;
+}

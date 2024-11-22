@@ -198,7 +198,9 @@ class DataManager():
         formule = loaded_data['formule']
         return model, description, metrics, formule
 
-    
+    def clear(self):
+        self.data = pd.DataFrame()
+
 if __name__ == "__main__":
     dm = DataManager()
     dm.read()
