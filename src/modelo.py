@@ -34,3 +34,20 @@ def entrenar_modelo(data, columnas_entrada, columna_salida):
     print(f"Error Cuadrático Medio (ECM): {ecm}")
 
     return formula, r2, ecm, modelo, y_pred
+
+def hacer_predicciones(modelo, nro_a_predecir:int):
+    """Realiza una predicción de un valor dado teniendo un modelo entrenado"""
+    try:
+        if modelo is None:
+            raise ValueError("El modelo no está entrenado.")
+        
+        input_data = [[nro_a_predecir]]
+
+        # Hacer la predicción
+        prediction = modelo.predict(input_data)
+        
+        # Retornar la predicción
+        return prediction[0]
+    
+    except Exception as e:
+        return str(e)

@@ -3,7 +3,7 @@ import PySide6.QtWidgets as ps
 from PySide6.QtCore import QAbstractTableModel, Qt
 from PySide6.QtGui import QColor
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
-from modelo import entrenar_modelo
+from modelo import entrenar_modelo, hacer_predicciones
 import pyqtgraph as pg
 import os
 
@@ -231,7 +231,7 @@ class MainWindow(ps.QMainWindow):
         self.predict_label = ps.QLabel("Prediction: ")
         self.predict_label.hide()
 
-        self.predict_button = self.button("Predict", self.save_model, hidden=True)
+        self.predict_button = self.button("Predict",self.predict, hidden=True)
 
 
         self.add_to_layout(self.step_four_layout,self.predict_button,self.predict_label,self.formula_label,self.campo_dinamico)
@@ -669,6 +669,12 @@ class MainWindow(ps.QMainWindow):
                     sub_layout = item.layout()
                     if sub_layout is not None:
                         self._show(sub_layout)
+            
+    def predict(self):
+        texto = float(self.campo_dinamico.text())
+        a = hacer_predicciones(self._modelo,texto)
+        self.predict_label.setText(f"Prediction: {a}")
+
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
