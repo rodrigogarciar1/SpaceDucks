@@ -218,8 +218,38 @@ class MainWindow(ps.QMainWindow):
         self.main_inner_layout.addLayout(self.step_three_layout)
 
 
+
+
+
+
+
         self.step_four_layout = ps.QVBoxLayout()
+
+        self.campo_dinamico = ps.QLineEdit()
+        self.campo_dinamico.setPlaceholderText("Introducir número para realizar la predicción")
+
+        self.predict_label = ps.QLabel("Prediction: ")
+        self.predict_label.hide()
+
+        self.predict_button = self.button("Predict", self.save_model, hidden=True)
+
+
+        self.add_to_layout(self.step_four_layout,self.predict_button,self.predict_label,self.formula_label,self.campo_dinamico)
+
         self.main_inner_layout.addLayout(self.step_four_layout)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         next_prev_step_layout = ps.QHBoxLayout()
 
