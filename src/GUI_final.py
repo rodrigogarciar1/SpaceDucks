@@ -58,6 +58,20 @@ class MainWindow(ps.QMainWindow):
 
         self.next_step()
 
+        ps.QMessageBox.information(
+            self, 
+            "Bienvenido a SpaceDuck's Linear Regression Tool", 
+            (
+                "¡Bienvenido!\n\n"
+                "Instrucciones para usar la aplicación:\n"
+                "1. Selecciona un archivo o carga un modelo existente usando los botones proporcionados.\n"
+                "2. Si seleccionas un archivo, puedes visualizar sus datos y elegir columnas para entrenar el modelo. Procesa los datos y corrige valores inexistentes si es necesario\n"
+                "3. Visualiza el modelo de regresión y guarda el resultado .\n"
+                "4. Realiza las predicciones que necesites.\n"
+                "¡Comencemos!"
+            )
+        )
+
     def button(self, button_text, function, hidden = False):
         button = ps.QPushButton(text = button_text)
         button.clicked.connect(function)
@@ -94,10 +108,10 @@ class MainWindow(ps.QMainWindow):
         interactive_layout = ps.QHBoxLayout()
 
         steps_layout = ps.QVBoxLayout()
-        self.step_one = ps.QLabel("1")
-        self.step_two = ps.QLabel("2")
-        self.step_three = ps.QLabel("3")
-        self.step_four = ps.QLabel("4")
+        self.step_one = ps.QLabel("Paso 1.\nAñadir \narchivo")
+        self.step_two = ps.QLabel("Paso 2.\nProcesado")
+        self.step_three = ps.QLabel("Paso 3.\nModelo")
+        self.step_four = ps.QLabel("Paso 4.\nPredecir")
 
         self.add_to_layout(steps_layout, self.step_one, self.step_two, self.step_three, self.step_four)
 
@@ -218,38 +232,27 @@ class MainWindow(ps.QMainWindow):
         self.main_inner_layout.addLayout(self.step_three_layout)
 
 
-
-
-
-
-
         self.step_four_layout = ps.QVBoxLayout()
 
+        h_layout = ps.QHBoxLayout()
+        self._entry_column_name = ps.QLabel()
+        name = self._formula
+        name = name.split("=")[0]
+        self._entry_column_name.setText(name)
         self.campo_dinamico = ps.QLineEdit()
         self.campo_dinamico.setPlaceholderText("Introducir número para realizar la predicción")
 
-        self.predict_label = ps.QLabel("Prediction: ")
+        self.add_to_layout(h_layout, self._entry_column_name, self.campo_dinamico)
+
+        self.predict_label = ps.QLabel("")
         self.predict_label.hide()
 
         self.predict_button = self.button("Predict",self.predict, hidden=True)
 
 
-        self.add_to_layout(self.step_four_layout,self.predict_button,self.predict_label,self.formula_label,self.campo_dinamico)
+        self.add_to_layout(self.step_four_layout, self.formula_label, h_layout, self.predict_button,self.predict_label,)
 
         self.main_inner_layout.addLayout(self.step_four_layout)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         next_prev_step_layout = ps.QHBoxLayout()
 
@@ -379,7 +382,7 @@ class MainWindow(ps.QMainWindow):
     #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
     def clear_data(self):
         if not self._file_name:
-            print("No hay archivo seleccionado.")
+            ps.QMessageBox.warning(self,"Error","No hay archivo seleccionado.")
         else:
 
             self._text_box.clear()
@@ -392,6 +395,7 @@ class MainWindow(ps.QMainWindow):
             self._hide(self.missing_data_menu)
             self._missing_options.setCurrentIndex(0)
             self._constant_value_input.setText("")
+            ps.QMessageBox.warning(self,"Datos Eliminados","Los datos se eliminaron correctamente.")
 
     def set_dropdown_content(self, contents):
         self._entry_column.addItem("-- Columna de entrada --")
@@ -568,8 +572,19 @@ class MainWindow(ps.QMainWindow):
 
         if self._current_step == 1:
             self.previous_step_button.hide()
-        elif self._current_step == 4:
+
+        elif self._current_step == 4 and self._formula != "":
             self.next_step_button.hide()
+            formula = self._formula
+            name = formula.split("=")[0]
+            text = str("Valor de "+name+":")
+            self._entry_column_name.setText(text)
+            name = formula.split("= ")[1]
+            name = name.split("* ")[1]
+            name = name.split(" +")[0]
+            text = str("Valor de "+name+":")
+            self.predict_label.setText(text)
+
         else:
             self.previous_step_button.show()
             self.next_step_button.show()
@@ -673,7 +688,8 @@ class MainWindow(ps.QMainWindow):
     def predict(self):
         texto = float(self.campo_dinamico.text())
         a = hacer_predicciones(self._modelo,texto)
-        self.predict_label.setText(f"Prediction: {a}")
+        texto = self.predict_label.text().split(":")[0]
+        self.predict_label.setText(f"{texto}: {a}")
 
 
 if __name__ == "__main__":
