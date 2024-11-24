@@ -686,11 +686,16 @@ class MainWindow(ps.QMainWindow):
                         self._show(sub_layout)
             
     def predict(self):
-        texto = float(self.campo_dinamico.text())
-        a = hacer_predicciones(self._modelo,texto)
-        texto = self.predict_label.text().split(":")[0]
-        self.predict_label.setText(f"{texto}: {a}")
+        try:
+            texto = float(self.campo_dinamico.text())
+            a = hacer_predicciones(self._modelo,texto)
+            texto = self.predict_label.text().split(":")[0]
+            self.predict_label.setText(f"{texto}: {a}")
 
+        except:
+            texto = self.predict_label.text().split(":")[0]
+            self.predict_label.setText(f"{texto}: ")
+            ps.QMessageBox.warning(self, "Error", "Debe ser un número")
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
