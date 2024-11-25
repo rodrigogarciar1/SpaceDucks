@@ -41,9 +41,9 @@ The application allows users to import data, select variables, and create regres
 ## Project-Specific Information
 
 ### Team Members and Roles
-- **Product Owner**: Oversees the project’s direction, prioritizes features, and ensures alignment with user needs.
-- **Scrum Master**: Facilitates Agile practices and manages sprint progress.
-- **Developers**: Responsible for implementing core functionalities, such as regression model creation, data handling, and prediction features.
+- **Product Manager**: Oversees the project’s direction, prioritizes features, and ensures alignment with user needs.
+- **Documentation Manager**: Reviews and approves documentation. 
+- **Developers/SME**: Responsible for implementing core functionalities, such as regression model creation, data handling, and prediction features.
 - **Technical Writer**: Creates user documentation, maintains the README, and provides user-facing explanations of application features.
 
 ### Responsibilities
