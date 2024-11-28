@@ -2,6 +2,33 @@ import sqlite3 as sq
 import pandas as pd
 import PySide6.QtWidgets as ps
 import joblib
+from PySide6.QtCore import QAbstractTableModel, Qt
+
+class PandasModel(QAbstractTableModel):
+    def __init__(self, dataframe):
+        super().__init__()
+        self._dataframe = dataframe
+
+    def rowCount(self, parent=None):
+        return self._dataframe.shape[0]
+
+    def columnCount(self, parent=None):
+        return self._dataframe.shape[1]
+
+    def data(self, index, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            return str(self._dataframe.iat[index.row(), index.column()])
+        return None
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return self._dataframe.columns[section]
+            else:
+                return section + 1  # Row numbers starting from 1
+        return None
+    
+
 
 class DataManager():
     def __init__(self) -> None:
@@ -98,72 +125,73 @@ class DataManager():
 
     def depurate_nan(self, gui, strategy, entry_column, target_column):
         if self.data is None:
-            ps.QMessageBox.warning(self, "Error", "No hay datos cargados para procesar.")
-        
+            raise ValueError("No hay datos cargados para procesar.")  # Lanza una excepción en lugar de mostrar solo un mensaje.
+
         d = {entry_column: list(self.data[entry_column]), target_column: list(self.data[target_column])}
         column_data = pd.DataFrame(data=d)
-        
-        print(column_data)
-        entry_nan_count = column_data[entry_column].isna().sum()  # Contar NaN en la columna de entrada
-        target_nan_count = column_data[target_column].isna().sum()  # Contar NaN en la columna objetivo
 
-        # Verificar cuál columna tiene NaN y actuar en consecuencia
+        entry_nan_count = column_data[entry_column].isna().sum()
+        target_nan_count = column_data[target_column].isna().sum()
+
         if entry_nan_count > 0 and target_nan_count > 0:
-            # Preguntar al usuario cuál columna quiere procesar primero
             choice, ok = ps.QInputDialog.getItem(
                 gui,
                 "Seleccionar columna",
                 "Ambas columnas tienen valores inexistentes. ¿Cuál quieres procesar primero?",
                 [entry_column, target_column],
                 0,
-                False)
-            if ok and choice:  # Si el usuario selecciona una opción
-                selected_column = choice
-                other_column = target_column if selected_column == entry_column else entry_column
-            else:
-                return  # Si el usuario cancela, salir de la función
+                False
+            )
+            if not ok:  # Si el usuario cancela, se lanza una excepción
+                raise RuntimeError("El usuario canceló la selección de columna para procesar NaN.")
+            selected_column = choice
+            other_column = target_column if selected_column == entry_column else entry_column
         elif entry_nan_count > 0:
             selected_column = entry_column
             other_column = None
         elif target_nan_count > 0:
             selected_column = target_column
             other_column = None
+        else:
+            ps.QMessageBox.information(gui, "Información", "No se encontraron valores inexistentes para procesar.")
+            return column_data, entry_column, target_column
 
-        
-
+        # Aplica la depuración a las columnas
         self._depuration(gui, column_data, selected_column, strategy)
-        self._depuration(gui, column_data, other_column, strategy)
-    
+        if other_column:
+            self._depuration(gui, column_data, other_column, strategy)
+
         return column_data, entry_column, target_column
+
     
 
     def _depuration(self, gui, column_data, column, strategy):
+        if column is None or column_data[column].isna().sum() == 0:
+            return
+
         try:
-            if column is not None:
-                    if column_data[column].isna().sum() > 0:
-                        if strategy == "Eliminar filas":
-                            column_data.dropna(subset=[column], inplace=True)
-                        elif strategy == "Rellenar con media":
-                            column_data[column] = column_data[column].fillna(column_data[column].mean())
-                        elif strategy == "Rellenar con mediana":
-                            column_data[column] = column_data[column].fillna(column_data[column].median())
-                        elif strategy == "Rellenar con valor constante":
-                            constant_value = gui._constant_value_input.text()
-                            if constant_value == "":
-                                ps.QMessageBox.warning(gui, "Error", "Por favor, introduce un valor constante.")
-                                return
-                            try:
-                                constant_value = float(constant_value)  # Intentar convertir a número
-                            except ValueError:
-                                ps.QMessageBox.warning(gui, "Error", "El valor constante debe ser un número.")
-                                return
-                            # Rellena NaN en la columna seleccionada con el valor constante
-                            column_data[column] = column_data[column].fillna(constant_value)
-                    ps.QMessageBox.information(gui, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{column}'.")
+            if strategy == "Eliminar filas":
+                column_data.dropna(subset=[column], inplace=True)
+            elif strategy == "Rellenar con media":
+                column_data[column] = column_data[column].fillna(column_data[column].mean())
+            elif strategy == "Rellenar con mediana":
+                column_data[column] = column_data[column].fillna(column_data[column].median())
+            elif strategy == "Rellenar con valor constante":
+                constant_value = gui._constant_value_input.text()
+                if not constant_value.strip():
+                    raise ValueError("El valor constante está vacío.")
+                try:
+                    constant_value = float(constant_value)
+                except ValueError:
+                    raise ValueError("El valor constante debe ser un número.")
+                column_data[column] = column_data[column].fillna(constant_value)
             else:
-                pass
+                raise ValueError(f"Estrategia desconocida: {strategy}")
+
+            ps.QMessageBox.information(gui, "Éxito", f"Se aplicó la estrategia '{strategy}' a la columna '{column}'.")
         except Exception as e:
-            ps.QMessageBox.warning(gui, "Error", f"Ocurrió un error durante el preprocesado: {str(e)}")
+            raise RuntimeError(f"Error al procesar la columna '{column}': {str(e)}")
+
 
 
     def save_model_with_description(self, model, description, metrics, formule, filename):
@@ -201,6 +229,4 @@ class DataManager():
     def clear(self):
         self.data = pd.DataFrame()
 
-if __name__ == "__main__":
-    dm = DataManager()
-    dm.read()
+

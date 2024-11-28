@@ -2,35 +2,11 @@ import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtCore import QAbstractTableModel, Qt
 from PySide6.QtGui import QColor
-from data_manager import DataManager   # Importa el módulo data_manager correctamente
+from data_manager import DataManager, PandasModel # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo, hacer_predicciones
 import pyqtgraph as pg
 import os
 
-class PandasModel(QAbstractTableModel):
-    def __init__(self, dataframe):
-        super().__init__()
-        self._dataframe = dataframe
-
-    def rowCount(self, parent=None):
-        return self._dataframe.shape[0]
-
-    def columnCount(self, parent=None):
-        return self._dataframe.shape[1]
-
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            return str(self._dataframe.iat[index.row(), index.column()])
-        return None
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                return self._dataframe.columns[section]
-            else:
-                return section + 1  # Row numbers starting from 1
-        return None
-    
 
 class MainWindow(ps.QMainWindow):
     def __init__(self):
@@ -310,20 +286,26 @@ class MainWindow(ps.QMainWindow):
         
 
     def apply_missing_data_strategy(self):
-        """Aplica la estrategia seleccionada para manejar los valores inexistentes."""
         strategy = self._missing_options.currentText()
-        entry_column = self._entry_column.currentText()  # Obtener los nombres de las columnas seleccionadas
+        entry_column = self._entry_column.currentText()
         target_column = self._target_column.currentText()
 
         if self._missing_options.currentIndex() == 0:
-            ps.QMessageBox.warning(self, "Error", "Por favor, seleccione una de las opciones de estrategia válida.")
+            ps.QMessageBox.warning(self, "Error", "Por favor, selecciona una opción de estrategia válida.")
             return
-        data, entry_column, target_column =self._manager.depurate_nan(self, strategy, entry_column, target_column)
 
-        self.plot_regression(entry_column, target_column, data)
+        try:
+            data, entry_column, target_column = self._manager.depurate_nan(self, strategy, entry_column, target_column)
+            self.plot_regression(entry_column, target_column, data)
+            self.next_step_button.setDisabled(False)
+            self.next_step_button.setToolTip("Siguiente")
+        except Exception as e:
+            ps.QMessageBox.critical(self, "Error", f"Se produjo un error: {str(e)}")
+            self.next_step_button.setDisabled(True)
+            self.next_step_button.setToolTip("Aplica los cambios antes de seguir")
+
+            
         
-        self.next_step_button.setDisabled(False)
-        self.next_step_button.setToolTip("Siguiente")
         
 
     def add_file(self):
@@ -368,7 +350,7 @@ class MainWindow(ps.QMainWindow):
 
             #Verificar si el DataFrame está vacío
                 if len(self._manager.data) == 0:
-                    self.clear_data()  #Limpiar datos en caso de archivo vacío
+                    self.clear_data()  #Preguntar esta dependencia #Limpiar datos en caso de archivo vacío
                     raise IndexError
             
                 self._table_widget.setModel(PandasModel(self._manager.data))  #Mostrar datos en QTextEdit
