@@ -7,7 +7,7 @@ class DataManager():
     def __init__(self) -> None:
         self.data = pd.DataFrame()
 
-    def read(self, fn):
+    def read(self, fn:str):
 
         if fn.endswith('.xlsx') or fn.endswith('.xls'):
             self.read_xlsx(fn)
@@ -17,11 +17,18 @@ class DataManager():
 
         elif fn.endswith('.db') or fn.endswith('.sqlite'):
             self.read_db(fn)
+
+        elif fn.endswith('.joblib'):
+            self.load_model_with_description(fn)
+
         else:
             raise ValueError('The chosen file has an invalid extension.')
 
     def read_xlsx(self, file):
-        data = pd.read_excel(file, sheet_name=None)  # Carga todas las hojas
+        try:
+            data = pd.read_excel(file, sheet_name=None)  # Carga todas las hojas
+        except:
+            raise FileNotFoundError
         print(f"Archivo '{file}' cargado exitosamente.")
 
         # Verifica si hay hojas en el archivo
@@ -38,7 +45,11 @@ class DataManager():
         print(self.data.head())
 
     def read_csv(self, file):
-        self.data = pd.read_csv(file)  # Carga todas las hojas
+        try:
+            self.data = pd.read_csv(file)  # Carga todas las hojas
+        except:
+            raise FileNotFoundError
+        
         print(f"Archivo '{file}' cargado exitosamente.")
 
         # Verifica si hay hojas en el archivo
@@ -53,8 +64,10 @@ class DataManager():
 
     def read_db(self, file):
         # Conexión a la base de datos SQLite
-        conexion = sq.connect(file)
-
+        try:
+            conexion = sq.connect(f"file:{file}?mode=ro", uri=True)
+        except:
+            raise FileNotFoundError
         # Crear un cursor para ejecutar consultas SQL
         cursor = conexion.cursor()
 
@@ -65,7 +78,10 @@ class DataManager():
         print("Tablas en la base de datos:", tablas)
 
         # Suponiendo que queremos leer datos de una tabla en particular
-        nombre_tabla = tablas[0][0]  # Selecciona la primera tabla encontrada
+        try:
+            nombre_tabla = tablas[0][0]  # Selecciona la primera tabla encontrada
+        except:
+            raise IndexError
         print(f"Leyendo datos de la tabla: {nombre_tabla}")
 
         # Leer todos los datos de la tabla
@@ -191,11 +207,18 @@ class DataManager():
         print(f"Model and description saved to {filename}")
 
     def load_model_with_description(self, filename):
-        loaded_data = joblib.load(filename)
-        model = loaded_data['model']
-        description = loaded_data['description']
-        metrics = loaded_data['metrics']
-        formule = loaded_data['formule']
+        try:
+            loaded_data = joblib.load(filename)
+        except:
+            raise FileNotFoundError
+        
+        try:
+            model = loaded_data['model']
+            description = loaded_data['description']
+            metrics = loaded_data['metrics']
+            formule = loaded_data['formule']
+        except:
+            raise IndexError
         return model, description, metrics, formule
 
     def clear(self):

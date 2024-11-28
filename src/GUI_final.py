@@ -1,7 +1,6 @@
 import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtCore import QAbstractTableModel, Qt
-from PySide6.QtGui import QColor
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo, hacer_predicciones
 import pyqtgraph as pg
@@ -342,24 +341,21 @@ class MainWindow(ps.QMainWindow):
 
     def data_reader(self):
         if self._file_name.endswith(".joblib"):
-            try:
-                self._modelo, description, self._metricas, self._formula = self._manager.load_model_with_description(self._file_name)
-                fn = self._file_name
+            self._modelo, description, self._metricas, self._formula = self._manager.read(self._file_name)
+            fn = self._file_name
 
-                self._table_widget.hide()
+            self._table_widget.hide()
 
-                self._text_box.setText(fn)
-                self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
-                self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
-                self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
-                self.r2_label.show()
-                self.ecm_label.show()
-                self.formula_label.show()
-                self._description_edit.setText(description)
-                self._description_edit.show()
+            self._text_box.setText(fn)
+            self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
+            self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
+            self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
+            self.r2_label.show()
+            self.ecm_label.show()
+            self.formula_label.show()
+            self._description_edit.setText(description)
+            self._description_edit.show()
 
-            except:
-                raise Exception
 
 
         else:
@@ -543,6 +539,7 @@ class MainWindow(ps.QMainWindow):
             self.next_step_button.setDisabled(True)
             self.next_step_button.setToolTip("Introduce un archivo")
             return False  # Indicate failure
+        
         except Exception as e:
             # Handle any unexpected exceptions
             print(f"Caught an unexpected exception: {e}")
