@@ -342,21 +342,14 @@ class MainWindow(ps.QMainWindow):
     def data_reader(self):
         if self._file_name.endswith(".joblib"):
             self._modelo, description, self._metricas, self._formula = self._manager.read(self._file_name)
+            
             fn = self._file_name
-
-            self._table_widget.hide()
 
             self._text_box.setText(fn)
             self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
             self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
             self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
-            self.r2_label.show()
-            self.ecm_label.show()
-            self.formula_label.show()
             self._description_edit.setText(description)
-            self._description_edit.show()
-
-
 
         else:
             if self._file_name != "":
@@ -538,6 +531,7 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.warning(self, "Error", error_messages[type(e)])
             self.next_step_button.setDisabled(True)
             self.next_step_button.setToolTip("Introduce un archivo")
+            self.clear_data()
             return False  # Indicate failure
         
         except Exception as e:
@@ -546,6 +540,7 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")
             self.next_step_button.setDisabled(True)
             self.next_step_button.setToolTip("Introduce un archivo")
+            self.clear_data()
             return False  # Indicate failure
 
     def change_step(self, current_phase, next_phase):

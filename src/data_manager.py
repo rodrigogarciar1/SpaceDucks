@@ -19,7 +19,7 @@ class DataManager():
             self.read_db(fn)
 
         elif fn.endswith('.joblib'):
-            self.load_model_with_description(fn)
+            return self.load_model_with_description(fn)
 
         else:
             raise ValueError('The chosen file has an invalid extension.')
@@ -210,7 +210,7 @@ class DataManager():
         try:
             loaded_data = joblib.load(filename)
         except:
-            raise FileNotFoundError
+            raise IndexError
         
         try:
             model = loaded_data['model']
