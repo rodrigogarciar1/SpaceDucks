@@ -1,7 +1,7 @@
 import sys
 import PySide6.QtWidgets as ps
-from PySide6.QtCore import QAbstractTableModel, Qt
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor #borrar esto proximamente
 from data_manager import DataManager, PandasModel # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo, hacer_predicciones
 import pyqtgraph as pg
@@ -68,9 +68,16 @@ class MainWindow(ps.QMainWindow):
 
     def initUI(self):
         self.setWindowTitle("Análisis de Regresión Lineal")
-        self.setGeometry(100, 100, 900, 500)  # Set initial window size
+        # Obtener la geometría de la pantalla disponible
+        screen = ps.QApplication.primaryScreen()  # Obtiene la pantalla principal
+        geometry = screen.availableGeometry()  # Obtiene la geometría disponible
 
+        # Establecer la geometría de la ventana
+        self.setGeometry(geometry)
 
+        # Mostrar la ventana maximizada
+        self.showMaximized()
+        
         # Create a central widget to hold all content
         central_widget = ps.QWidget()
         window_layout = ps.QVBoxLayout(central_widget)
@@ -84,10 +91,10 @@ class MainWindow(ps.QMainWindow):
         interactive_layout = ps.QHBoxLayout()
 
         steps_layout = ps.QVBoxLayout()
-        self.step_one = ps.QLabel("Paso 1.\nAñadir \narchivo")
-        self.step_two = ps.QLabel("Paso 2.\nProcesado")
-        self.step_three = ps.QLabel("Paso 3.\nModelo")
-        self.step_four = ps.QLabel("Paso 4.\nPredecir")
+        self.step_one = ps.QLabel("Datos")
+        self.step_two = ps.QLabel("Procesado")
+        self.step_three = ps.QLabel("Modelo")
+        self.step_four = ps.QLabel("Predecir")
 
         self.add_to_layout(steps_layout, self.step_one, self.step_two, self.step_three, self.step_four)
 
@@ -129,6 +136,9 @@ class MainWindow(ps.QMainWindow):
 
         # Tabla para mostrar los datos del DataFrame
         self._table_widget = ps.QTableView()
+        self._table_widget.setSizePolicy(ps.QSizePolicy.Expanding, ps.QSizePolicy.Expanding)
+        self._table_widget.setSizeAdjustPolicy(ps.QAbstractScrollArea.AdjustToContents)
+        self._table_widget.horizontalHeader().setSectionResizeMode(ps.QHeaderView.Stretch)
 
         linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
 
