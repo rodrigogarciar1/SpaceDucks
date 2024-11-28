@@ -1,9 +1,10 @@
 import sys
 import PySide6.QtWidgets as ps
-from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex
+from PySide6.QtCore import QAbstractTableModel, Qt
 from data_manager import DataManager   # Importa el módulo data_manager correctamente
-from modelo import entrenar_modelo
+from modelo import entrenar_modelo, hacer_predicciones
 import pyqtgraph as pg
+import os
 
 class PandasModel(QAbstractTableModel):
     def __init__(self, dataframe):
@@ -34,10 +35,41 @@ class MainWindow(ps.QMainWindow):
     def __init__(self):
         super().__init__()
         self._file_name = ""
-        self.initUI()
         self._manager = DataManager()
         self._metricas = [0, 0]
         self._formula = ""
+        self._current_step = 0
+        self.initUI()
+        self._steps = [self.main_inner_layout ,self.step_one_layout, self.step_two_layout, self.step_three_layout, self.step_four_layout]
+        self.side_bar = [self.step_zero, self.step_one, self.step_two, self.step_three, self.step_four]
+        self._read_file = False
+       
+
+        for layout in self._steps[1:]:
+            layout.setAlignment(Qt.AlignTop)
+        
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the full path to the file
+        sshFile = os.path.join(script_dir, "style.qss")
+        with open(sshFile,"r") as fh:
+            self.setStyleSheet(fh.read())
+
+        self.next_step()
+
+        ps.QMessageBox.information(
+            self, 
+            "Bienvenido a SpaceDuck's Linear Regression Tool", 
+            (
+                "¡Bienvenido!\n\n"
+                "Instrucciones para usar la aplicación:\n"
+                "1. Selecciona un archivo o carga un modelo existente usando los botones proporcionados.\n"
+                "2. Si seleccionas un archivo, puedes visualizar sus datos y elegir columnas para entrenar el modelo. Procesa los datos y corrige valores inexistentes si es necesario\n"
+                "3. Visualiza el modelo de regresión y guarda el resultado .\n"
+                "4. Realiza las predicciones que necesites.\n"
+                "¡Comencemos!"
+            )
+        )
 
     def button(self, button_text, function, hidden = False):
         button = ps.QPushButton(text = button_text)
@@ -61,55 +93,76 @@ class MainWindow(ps.QMainWindow):
         self.setWindowTitle("Análisis de Regresión Lineal")
         self.setGeometry(100, 100, 900, 500)  # Set initial window size
 
-        # Create a main scroll area that covers the entire window
-        main_scroll_area = ps.QScrollArea()
-        main_scroll_area.setWidgetResizable(True)
-        #main_scroll_area.setStyleSheet(" background-color: #f0e68c; /* Amarillo pastel */ font-family: 'Courier New'; /* Fuente retro */")
 
         # Create a central widget to hold all content
         central_widget = ps.QWidget()
-        layout = ps.QVBoxLayout(central_widget)
-            # Estilo general
-        
-        layout_h1 = ps.QHBoxLayout()
+        window_layout = ps.QVBoxLayout(central_widget)
+
+        logo_space = ps.QHBoxLayout()
+        self.logo = ps.QLabel(text="SpaceDuck's Linear Regresion Tool")
+        self.logo.setObjectName("logo")
+        logo_space.addWidget(self.logo)
+
+        self.step_zero = ps.QLabel()
+        interactive_layout = ps.QHBoxLayout()
+
+        steps_layout = ps.QVBoxLayout()
+        self.step_one = ps.QLabel("Paso 1.\nAñadir \narchivo")
+        self.step_two = ps.QLabel("Paso 2.\nProcesado")
+        self.step_three = ps.QLabel("Paso 3.\nModelo")
+        self.step_four = ps.QLabel("Paso 4.\nPredecir")
+
+        self.add_to_layout(steps_layout, self.step_one, self.step_two, self.step_three, self.step_four)
+
+        for i in range(steps_layout.count()):
+            widget = steps_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.setObjectName("steps")
+
+        main_layout = ps.QVBoxLayout()
+
+        self.main_inner_layout = ps.QVBoxLayout()
+
+        self.step_one_layout = ps.QVBoxLayout()
         # Botón para seleccionar archivo
+        
         self.b1 = self.button("Añadir archivos", self.add_file)
+        
         self.model_button = self.button("Añadir modelo", self.add_model)
-        
-        self.add_to_layout(layout_h1, self.b1, self.model_button)
-        
-        layout.addLayout(layout_h1)
-
-        # Botón para visualizar archivo
-        self.b2 = self.button("Visualizar archivo", self.data_reader)
-
-        layout.addWidget(self.b2)
-
-        layout_h = ps.QHBoxLayout()
         
         # Label para mostrar el nombre del archivo seleccionado
         self._text_box = ps.QLabel("")
-        self._text_box.setStyleSheet("background-color: white; color: blue; max-height: 25px; max-width: 900px; padding: 5px")
+        self._text_box.setObjectName("file_label")
 
         # Botón para eliminar archivo
-        self.b3 = self.button("Eliminar archivo", self.clear_data)
+        self.b3 = self.button("Eliminar archivo", self.clear_data, hidden=True)
 
-        self.add_to_layout(layout_h, self._text_box, self.b3)
+        h1_layout = ps.QHBoxLayout()
+        self.add_to_layout(h1_layout, self.b1, self.model_button)
 
-        layout.addLayout(layout_h)
+        h2_layout = ps.QHBoxLayout()
+        self.add_to_layout(h2_layout, self._text_box, self.b3)
 
-            # Tabla para mostrar los datos del DataFrame
+        self.add_to_layout(self.step_one_layout, h1_layout, h2_layout)
+        
+        self.main_inner_layout.addLayout(self.step_one_layout)
+
+
+        self.step_two_layout = ps.QVBoxLayout()
+
+        # Tabla para mostrar los datos del DataFrame
         self._table_widget = ps.QTableView()
-        layout.addWidget(self._table_widget)
 
         linear_menu = ps.QHBoxLayout() #Hace un layout horizontal 
 
         # Dropdown para la selección de la columna de datos
         self._entry_column = ps.QComboBox()
-        self._entry_column.hide()  # Ocultar inicialmente
+        self._entry_column.currentIndexChanged.connect(self.change_detected)
+        self._entry_column.hide()
 
         # Dropdown para la selección de la columna objetivo
         self._target_column = ps.QComboBox()
+        self._target_column.currentIndexChanged.connect(self.change_detected)
         self._target_column.hide()
 
         #Botón para procesar el modelo de regresión lineal
@@ -118,13 +171,14 @@ class MainWindow(ps.QMainWindow):
         
         self.add_to_layout(linear_menu, self._entry_column, self._target_column, self._accept_button)
 
-        layout.addLayout(linear_menu)
+        
         
         #Opciones de manejo de valores inexistentes
-        missing_data_menu = ps.QHBoxLayout()
+        self.missing_data_menu = ps.QHBoxLayout()
 
         self._missing_options = ps.QComboBox()
-        self._missing_options.addItems(["Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
+        self._missing_options.addItems(["-- Selecciona una opcion --","Eliminar filas", "Rellenar con media", "Rellenar con mediana", "Rellenar con valor constante"])
+        self._missing_options.model().item(0).setEnabled(False)
         self._missing_options.currentIndexChanged.connect(self.missing_option_changed)
         self._missing_options.hide()  # Deshabilitado inicialmente
 
@@ -134,14 +188,22 @@ class MainWindow(ps.QMainWindow):
 
         self._apply_button = self.button("Aplicar", self.apply_missing_data_strategy, hidden=True)
 
-        self.add_to_layout(missing_data_menu, self._missing_options, self._constant_value_input, self._apply_button)
+        self.add_to_layout(self.missing_data_menu, self._missing_options, self._constant_value_input, self._apply_button)
 
-        layout.addLayout(missing_data_menu)
+        self.add_to_layout(self.step_two_layout, self._table_widget, linear_menu, self.missing_data_menu)
 
+        self.main_inner_layout.addLayout(self.step_two_layout)
+
+
+
+        self.step_three_layout = ps.QVBoxLayout()
+
+        h_layout = ps.QHBoxLayout()
         self._graph = pg.PlotWidget()
-        self._graph.setStyleSheet("min-height:400px")
+        self._graph.setStyleSheet("max-height:600px;")
         self._graph.hide()
 
+        v_layout = ps.QVBoxLayout()
         #Etiqueta para mostrar la fórmula de regresión
         self.formula_label = ps.QLabel("Fórmula de Regresión: ")
         self.formula_label.hide()
@@ -151,50 +213,100 @@ class MainWindow(ps.QMainWindow):
         self.ecm_label = ps.QLabel("ECM: ")
         self.ecm_label.hide()
         self.r2_label.hide()
-        
+        self.add_to_layout(v_layout, self.formula_label, self.ecm_label, self.r2_label)
+        self.add_to_layout(h_layout, self._graph, v_layout)
         self.setWindowTitle("Análisis de Regresión Lineal")
-        self.statusBar = ps.QStatusBar()
-        self.setStatusBar(self.statusBar)
-        
 
         # Área de texto para la descripción del modelo
         self._description_edit = ps.QTextEdit()
         self._description_edit.setPlaceholderText("Escribe aquí la descripción del modelo (opcional)")
-        self._description_edit.setStyleSheet("color: black")
         self._description_edit.hide()
           # Botón para guardar el modelo (incluye descripción)
     
         self.save_button = self.button("Guardar Modelo", self.save_model, hidden=True)
 
          
-        self.add_to_layout(layout, self._graph, self.formula_label, self.r2_label, self.ecm_label, self._description_edit, self.save_button)
-        # Layout principal
-        layout = ps.QVBoxLayout()
+        self.add_to_layout(self.step_three_layout, h_layout, self._description_edit, self.save_button)
+        
+        self.main_inner_layout.addLayout(self.step_three_layout)
 
-        # Set the central widget as the scroll area's widget
-        main_scroll_area.setWidget(central_widget)
 
-        # Set the scroll area as the central widget of the main window
-        self.setCentralWidget(main_scroll_area)
+        self.step_four_layout = ps.QVBoxLayout()
 
+        h_layout = ps.QHBoxLayout()
+        self._entry_column_name = ps.QLabel()
+        name = self._formula
+        name = name.split("=")[0]
+        self._entry_column_name.setText(name)
+        self.campo_dinamico = ps.QLineEdit()
+        self.campo_dinamico.setPlaceholderText("Introducir número para realizar la predicción")
+
+        self.add_to_layout(h_layout, self._entry_column_name, self.campo_dinamico)
+
+        self.predict_label = ps.QLabel("")
+        self.predict_label.hide()
+
+        self.predict_button = self.button("Predict",self.predict, hidden=True)
+
+
+        self.add_to_layout(self.step_four_layout, self.formula_label, h_layout, self.predict_button,self.predict_label,)
+
+        self.main_inner_layout.addLayout(self.step_four_layout)
+
+        next_prev_step_layout = ps.QHBoxLayout()
+
+        self.previous_step_button = self.button("< Anterior", self.prev_step, hidden=True)
+        self.next_step_button = self.button("Siguiente >", self.next_step)
+
+        self.previous_step_button.setObjectName("prev")
+        self.next_step_button.setObjectName("next")
+
+        self.next_step_button.setDisabled(True)
+        self.next_step_button.setToolTip("Introduce un archivo")
+
+        next_prev_step_layout.addWidget(self.previous_step_button)
+        next_prev_step_layout.addStretch(1)
+        next_prev_step_layout.addWidget(self.next_step_button)
+
+        self.add_to_layout(main_layout, self.main_inner_layout, next_prev_step_layout)
+
+
+        self.add_to_layout(interactive_layout, steps_layout, main_layout)
+
+        self.add_to_layout(window_layout, logo_space, interactive_layout)
+
+        self.setCentralWidget(central_widget)
+
+        
     def add_model(self):
-        self.b2.show()
-        self.b1.hide()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
         if len(file_name)>0:
             self._file_name = file_name
         else:
             return
-        self._text_box.setText(self._file_name)
         
+        self._manager.clear()
+        self._table_widget.setModel(PandasModel(self._manager.data))
+        self._text_box.setText(self._file_name)
+        self.next_step_button.setDisabled(False)
+        self.next_step_button.setToolTip("Siguiente")
+        self._read_file = True
     
+    def change_detected(self):
+        self._missing_options.setCurrentIndex(0)
+
+        self._hide(self.missing_data_menu)
+        return
+
     def missing_option_changed(self):
         """Mostrar u ocultar la entrada para valor constante dependiendo de la opción seleccionada."""
         if self._missing_options.currentText() == "Rellenar con valor constante":
             self._constant_value_input.show()
         else:
             self._constant_value_input.hide()
-          
+        self.next_step_button.setDisabled(True)
+        self.next_step_button.setToolTip("Aplica los cambios antes de seguir")
+        
 
     def apply_missing_data_strategy(self):
         """Aplica la estrategia seleccionada para manejar los valores inexistentes."""
@@ -202,122 +314,84 @@ class MainWindow(ps.QMainWindow):
         entry_column = self._entry_column.currentText()  # Obtener los nombres de las columnas seleccionadas
         target_column = self._target_column.currentText()
 
+        if self._missing_options.currentIndex() == 0:
+            ps.QMessageBox.warning(self, "Error", "Por favor, seleccione una de las opciones de estrategia válida.")
+            return
         data, entry_column, target_column =self._manager.depurate_nan(self, strategy, entry_column, target_column)
 
         self.plot_regression(entry_column, target_column, data)
-
-        self.save_button.show()
-        self._description_edit.show()
+        
+        self.next_step_button.setDisabled(False)
+        self.next_step_button.setToolTip("Siguiente")
         
 
     def add_file(self):
-        self.b2.show()
         self._graph.hide()
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open File", filter="Accepted Files (*.csv *.xlsx *.xls *.db *.sqlite)")
-        if len(file_name)>0:
-            self._file_name = file_name
-        else:
+        if len(file_name)<=0:
             return
+        
+        self._manager.clear()
+        self._file_name = file_name
+        self._table_widget.setModel(PandasModel(self._manager.data))
         self._text_box.setText(self._file_name)
+        self.next_step_button.setDisabled(False)
+        self.next_step_button.setToolTip("Siguiente")
+        self._read_file = True
 
     def data_reader(self):
         if self._file_name.endswith(".joblib"):
-            try:
-                self._modelo, description, self._metricas, self._formula = self._manager.load_model_with_description(self._file_name)
-                fn = self._file_name
-                self.clear_data()
-                self._table_widget.hide()
+            self._modelo, description, self._metricas, self._formula = self._manager.read(self._file_name)
+            fn = self._file_name
 
-                self._text_box.setText(fn)
-                self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
-                self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
-                self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
-                self.r2_label.show()
-                self.ecm_label.show()
-                self.formula_label.show()
-                self._description_edit.setText(description)
-                self._description_edit.show()
-                self.b2.hide()
-                ps.QMessageBox.information(self, "Éxito", "El archivo se ha cargado correctamente.")
+            self._table_widget.hide()
 
-            except IndexError:
-                ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
-            except FileNotFoundError:
-                ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
-            except PermissionError:
-                ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
-            except ValueError:
-                ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
-            except UnicodeDecodeError:
-                ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
-            except MemoryError:
-                ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
-            except Exception as e:
-                ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")
+            self._text_box.setText(fn)
+            self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
+            self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
+            self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
+            self.r2_label.show()
+            self.ecm_label.show()
+            self.formula_label.show()
+            self._description_edit.setText(description)
+            self._description_edit.show()
+
 
 
         else:
-            try: #Gestión de errores
-                if self._file_name:
-                    self._manager.read(self._file_name)  #Leer el archivo usando DataManager
+            if self._file_name != "":
+                self._manager.read(self._file_name)  #Leer el archivo usando DataManager
 
-                #Verificar si el DataFrame está vacío
-                    if self._manager.data.empty:
-                        ps.QMessageBox.warning(self, "Error", "El archivo está vacío o no tiene datos.")
-                        self.clear_data()  #Limpiar datos en caso de archivo vacío
-                        return
-                
-                    self._table_widget.setModel(PandasModel(self._manager.data))  #Mostrar datos en QTextEdit
-                    self.set_dropdown_content(self._manager.data.keys())
-                    self._table_widget.show()  # Asegúrate de mostrar la tabla aquí
-                    self.b2.hide()
-                else:
-                    print("No se ha seleccionado ningún archivo.")
-                    ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
-            except IndexError:
-                ps.QMessageBox.warning(self, "Error", "Archivo vacío o sin datos.")
-            except FileNotFoundError:
-                ps.QMessageBox.warning(self, "Error", "No se encontró el archivo.")
-            except PermissionError:
-                ps.QMessageBox.warning(self, "Error", "No tienes permiso para abrir este archivo.")
-            except ValueError:
-                ps.QMessageBox.warning(self, "Error", "Error en el formato del archivo.")
-            except UnicodeDecodeError:
-                ps.QMessageBox.warning(self, "Error", "Error de codificación al leer el archivo.")
-            except MemoryError:
-                ps.QMessageBox.warning(self, "Error", "El archivo es demasiado grande para ser cargado en memoria.")
-            except Exception as e:
-                ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")         
+            #Verificar si el DataFrame está vacío
+                if len(self._manager.data) == 0:
+                    self.clear_data()  #Limpiar datos en caso de archivo vacío
+                    raise IndexError
+            
+                self._table_widget.setModel(PandasModel(self._manager.data))  #Mostrar datos en QTextEdit
+                self.set_dropdown_content(self._manager.data.keys())
+            else:
+                print("No se ha seleccionado ningún archivo.")
+                ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
+        
 
 
     #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
     def clear_data(self):
         if not self._file_name:
-            print("No hay archivo seleccionado.")
+            ps.QMessageBox.warning(self,"Error","No hay archivo seleccionado.")
         else:
 
             self._text_box.clear()
             self._file_name = ""
-            self._table_widget.setModel(None)
-
-            self._entry_column.hide() 
-            self._entry_column.clear()
-            self._target_column.hide()
-            self._target_column.clear()
-            self._accept_button.hide()
-
-            self._missing_options.hide()
-            self._apply_button.hide()
-
-            self.save_button.hide()
-            self._description_edit.hide()
-
-            self.r2_label.hide()
-            self.ecm_label.hide()
-            self.formula_label.hide()
-            self._graph.hide()
-
-            self.b2.hide()
+            self.next_step_button.setDisabled(True)
+            self._manager.clear()
+            self._graph.clear()
+            self._formula = ""
+            self._metricas = [0,0]
+            self._hide(self.missing_data_menu)
+            self._missing_options.setCurrentIndex(0)
+            self._constant_value_input.setText("")
+            ps.QMessageBox.warning(self,"Datos Eliminados","Los datos se eliminaron correctamente.")
 
     def set_dropdown_content(self, contents):
         self._entry_column.addItem("-- Columna de entrada --")
@@ -347,19 +421,8 @@ class MainWindow(ps.QMainWindow):
             self.formula_label.setText(f"Fórmula de Regresión: {self._formula}")
             self.r2_label.setText(f"R²: {self._metricas[0]:.4f}")
             self.ecm_label.setText(f"ECM: {self._metricas[1]:.4f}")
-
-            self._missing_options.hide()
-            self._entry_column.hide()
-            self._target_column.hide()
-            self._table_widget.hide()
-            self._accept_button.hide()
-            self._apply_button.hide()
-
-            self._graph.show()
+            
             self._graph.clear()
-            self.r2_label.show()
-            self.ecm_label.show()
-            self.formula_label.show()
 
             pen = pg.mkPen(color=(0, 0, 0))
             self._graph.plot(data[columnas_entrada], list(data[columna_salida]),
@@ -384,14 +447,6 @@ class MainWindow(ps.QMainWindow):
         """Detecta los NaN e indica dónde, también controla que no se puedan acceder a ciertas 
         funcionalidades del programa si no son necesarias
         """
-
-        self.save_button.hide()
-        self._description_edit.hide()
-
-        self.r2_label.hide()
-        self.ecm_label.hide()
-        self.formula_label.hide()
-        self._graph.hide()
         
         if self._entry_column.currentIndex() == 0 or self._target_column.currentIndex() == 0:
             msg = str("La columna " + "de entrada "*(self._entry_column.currentIndex()==0) 
@@ -417,18 +472,14 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.warning(self, "Valores Inexistentes", message)
             return
 
+        self.next_step_button.setDisabled(False)
+        self.next_step_button.setToolTip("Siguiente")
+
         # Llama a plot_regression con las columnas seleccionadas
         columnas_entrada = entry_column
         columna_salida = target_column
         self.plot_regression(columnas_entrada, columna_salida)
-            
-         #Muestra el botón para guardar el modelo y el campo de descripción
-        self.save_button.show()
-        self._description_edit.show()
-        self._table_widget.hide()
-        self._entry_column.hide()  
-        self._target_column.hide()
-        self._accept_button.hide()
+
 
 
     def save_model(self):
@@ -446,6 +497,202 @@ class MainWindow(ps.QMainWindow):
         # Aquí podrías incluir la lógica para guardar el modelo y la descripción juntos
         print("Descripción del modelo:", self.model_description)
         ps.QMessageBox.information(self, "Éxito", "El modelo y la descripción se han guardado correctamente.")
+
+    def prev_step(self):
+        if self._file_name.endswith(".joblib") and self._current_step == 3:
+            self._current_step -=2
+            step = 2
+        else:
+            self._current_step -= 1
+            step = 1
+        self.change_step(self._steps[self._current_step + step], self._steps[self._current_step])
+        
+    
+    def next_step(self):
+        # Determine the next step based on the current state
+        if self._file_name.endswith(".joblib") and self._current_step == 1:
+            step = 2
+        else:
+            step = 1
+
+        # Update the current step
+        self._current_step += step
+        print(f"Moving to step: {self._current_step}")
+        self.change_step(self._steps[self._current_step - step], self._steps[self._current_step])
+
+    def handle_data_reading(self):
+        try:
+            self.data_reader()  # Attempt to read data
+            print("Data reading successful.")
+            return True  # Indicate success
+        except (IndexError, FileNotFoundError, PermissionError, ValueError, UnicodeDecodeError, MemoryError) as e:
+            # Handle specific exceptions with user feedback
+            error_messages = {
+                IndexError: "Archivo vacío o sin datos.",
+                FileNotFoundError: "No se encontró el archivo.",
+                PermissionError: "No tienes permiso para abrir este archivo.",
+                ValueError: "Error en el formato del archivo.",
+                UnicodeDecodeError: "Error de codificación al leer el archivo.",
+                MemoryError: "El archivo es demasiado grande para ser cargado en memoria."
+            }
+            ps.QMessageBox.warning(self, "Error", error_messages[type(e)])
+            self.next_step_button.setDisabled(True)
+            self.next_step_button.setToolTip("Introduce un archivo")
+            return False  # Indicate failure
+        
+        except Exception as e:
+            # Handle any unexpected exceptions
+            print(f"Caught an unexpected exception: {e}")
+            ps.QMessageBox.warning(self, "Error", f"Error inesperado: {str(e)}")
+            self.next_step_button.setDisabled(True)
+            self.next_step_button.setToolTip("Introduce un archivo")
+            return False  # Indicate failure
+
+    def change_step(self, current_phase, next_phase):
+        # Check if we need to read data based on the current step and conditions
+        if (self._current_step == 2 and len(self._manager.data) == 0) or (self._current_step == 3 and self._file_name.endswith(".joblib")):
+            print("Attempting to read data...")
+            if not self.handle_data_reading():
+                print("Data reading failed, exiting next_step.")
+                self._current_step = 1
+                return  # Exit if an exception was caught
+
+        print(self._current_step)
+        print(self._file_name) 
+        # Hide all widgets in the current step
+        self._hide(current_phase)
+
+        # Show all widgets in the next phase
+        self._show(next_phase)
+
+        
+
+        if self._current_step == 1:
+            self.previous_step_button.hide()
+
+        elif self._current_step == 4 and self._formula != "":
+            self.next_step_button.hide()
+            formula = self._formula
+            name = formula.split("=")[0]
+            text = str("Valor de "+name+":")
+            self._entry_column_name.setText(text)
+            name = formula.split("= ")[1]
+            name = name.split("* ")[1]
+            name = name.split(" +")[0]
+            text = str("Valor de "+name+":")
+            self.predict_label.setText(text)
+
+        else:
+            self.previous_step_button.show()
+            self.next_step_button.show()
+        
+        
+        self.next_step_button.setDisabled(False)
+            
+        if self._missing_options.currentIndex() == 0:
+                self._hide(self.missing_data_menu)
+
+        if self._current_step == 1 and self._file_name == "":
+            self.next_step_button.setDisabled(True)
+            self.next_step_button.setToolTip("Introduce un archivo")
+
+        if self._current_step == 2 and self._formula == "":
+            self.next_step_button.setDisabled(True)
+            self.next_step_button.setToolTip("Procesa los datos antes de continuar")
+
+        if self._current_step == 3 and self._file_name.endswith(".joblib"):  
+            self._graph.hide()
+
+        self.change_colors()
+        
+        if self._read_file:
+            ps.QMessageBox.information(self, "Éxito", "El archivo se ha cargado correctamente.")
+            self._read_file = False
+
+    def change_colors(self):
+        label = self.side_bar[self._current_step]
+        label.setStyleSheet("""
+        QLabel {
+        text-align: center;
+        font-size: 16px;
+        color: black;
+        background-color: #3066BE;
+        max-width: 80px;
+        min-width: 80px;
+        margin-top: -5px;
+        margin-left: 0px;
+        }""")
+        label.setAlignment(Qt.AlignCenter)
+
+        for i in reversed(range(0, self._current_step)):
+            label = self.side_bar[i]
+            label.setStyleSheet("""
+            QLabel {
+            text-align: center;
+            font-size: 16px;
+            color: black;
+            background-color: lightgray;
+            max-width: 80px;
+            min-width: 80px;
+            margin-top: -5px;
+            margin-left: 0px;
+            }""")
+            label.setAlignment(Qt.AlignCenter)
+
+        for i in range(self._current_step+1, 5):
+            label = self.side_bar[i]
+            label.setStyleSheet("""
+            QLabel {
+            text-align: center;
+            font-size: 16px;
+            color: black;
+            background-color: #B4C5E4;
+            max-width: 80px;
+            min-width: 80px;
+            margin-top: -5px;
+            margin-left: 0px;
+            }""")
+            label.setAlignment(Qt.AlignCenter)
+
+    def _hide(self, layout):
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    # Hide the widget if it's not a layout
+                    widget.hide()
+                else:
+                    # If it's a layout, recursively hide its widgets
+                    sub_layout = item.layout()
+                    if sub_layout is not None:
+                        self._hide(sub_layout)
+
+    def _show(self, layout):
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    # Hide the widget if it's not a layout
+                    widget.show()
+                else:
+                    # If it's a layout, recursively hide its widgets
+                    sub_layout = item.layout()
+                    if sub_layout is not None:
+                        self._show(sub_layout)
+            
+    def predict(self):
+        try:
+            texto = float(self.campo_dinamico.text())
+            a = hacer_predicciones(self._modelo,texto)
+            texto = self.predict_label.text().split(":")[0]
+            self.predict_label.setText(f"{texto}: {a}")
+
+        except:
+            texto = self.predict_label.text().split(":")[0]
+            self.predict_label.setText(f"{texto}: ")
+            ps.QMessageBox.warning(self, "Error", "Debe ser un número")
 
 if __name__ == "__main__":
     app = ps.QApplication(sys.argv)
