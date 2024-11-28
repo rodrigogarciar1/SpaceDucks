@@ -370,13 +370,21 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.warning(self,"Datos Eliminados","Los datos se eliminaron correctamente.")
 
     def set_dropdown_content(self, contents):
+
+        # Filtrar columnas que no sean de tipo str
+        valid_columns = self._manager.data.select_dtypes(exclude=['object', 'string']).columns.tolist()
+
+        # Limpiar los dropdowns
+        self._entry_column.clear()
+        self._target_column.clear()
+
         self._entry_column.addItem("-- Columna de entrada --")
         self._entry_column.model().item(0).setEnabled(False)
-        self._entry_column.addItems(contents) #Cambia el contenido de los dropdowns
+        self._entry_column.addItems(valid_columns) #Cambia el contenido de los dropdowns
 
         self._target_column.addItem("-- Columna de objetivo --")
         self._target_column.model().item(0).setEnabled(False)
-        self._target_column.addItems(contents)
+        self._target_column.addItems(valid_columns)
 
         #Hace los dropdows y el botón visibles
         self._entry_column.show()
