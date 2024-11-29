@@ -1,3 +1,38 @@
+name: Run Tests
+
+# TRIGGERS (eventos que inician el workflow)
+on:
+  push:
+    branches:
+      - main  # Ejecuta el workflow al hacer push a la rama `main`
+  pull_request:
+    branches:
+      - main  # Ejecuta el workflow cuando se abre un PR a la rama `main`
+
+# Configuración del trabajo (jobs)
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Configura el sistema operativo para el trabajo
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        python -m unittest discover -s tests
+
+
+
 app:
   name: "SpaceDuck's Linear Regression Tool"
   version: "1.0"
