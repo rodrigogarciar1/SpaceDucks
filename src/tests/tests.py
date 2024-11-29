@@ -1,9 +1,16 @@
 import unittest
 import pandas as pd
-from modelo import entrenar_modelo, hacer_predicciones
-from data_manager import DataManager
 from sklearn.linear_model import LinearRegression
 import os
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Add the parent directory to sys.path
+sys.path.append(parent_dir)
+from modelo import entrenar_modelo, hacer_predicciones
+from data_manager import DataManager
+
 
 class TestModelCreation(unittest.TestCase):
 
