@@ -1,18 +1,16 @@
-name: Run Tests
+name: CI Pipeline
 
-# TRIGGERS (eventos que inician el workflow)
 on:
   push:
     branches:
-      - main  # Ejecuta el workflow al hacer push a la rama `main`
+      - main
   pull_request:
     branches:
-      - main  # Ejecuta el workflow cuando se abre un PR a la rama `main`
+      - main
 
-# Configuración del trabajo (jobs)
 jobs:
   test:
-    runs-on: ubuntu-latest  # Configura el sistema operativo para el trabajo
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
@@ -30,61 +28,3 @@ jobs:
     - name: Run tests
       run: |
         python -m unittest discover -s tests
-
-
-
-app:
-  name: "SpaceDuck's Linear Regression Tool"
-  version: "1.0"
-  description: "Herramienta para realizar análisis de regresión lineal con procesamiento de datos y predicciones."
-
-dependencies:
-  python: ">=3.8"
-  libraries:
-    - PySide6: ">=6.5.0"
-    - pandas: ">=1.5.0"
-    - sqlite3: "builtin"
-    - scikit-learn: ">=1.2.0"
-    - pyqtgraph: ">=0.13.0"
-    - joblib: ">=1.3.0"
-
-file_types:
-  supported:
-    - "*.csv"
-    - "*.xlsx"
-    - "*.xls"
-    - "*.db"
-    - "*.sqlite"
-    - "*.joblib"
-
-gui:
-  steps:
-    - name: "Carga de Datos"
-      description: "Selecciona un archivo de datos o carga un modelo existente."
-    - name: "Procesamiento de Datos"
-      description: "Selecciona columnas, maneja valores inexistentes y visualiza datos."
-    - name: "Entrenamiento del Modelo"
-      description: "Entrena un modelo de regresión lineal y muestra métricas."
-    - name: "Predicciones"
-      description: "Realiza predicciones con el modelo entrenado."
-  styles:
-    file: "style.qss"
-
-data_management:
-  strategies:
-    - "Eliminar filas"
-    - "Rellenar con media"
-    - "Rellenar con mediana"
-    - "Rellenar con valor constante"
-  save_format: "joblib"
-
-model:
-  type: "LinearRegression"
-  metrics:
-    - "R²"
-    - "ECM"
-
-outputs:
-  save:
-    model_description: "Archivo que incluye el modelo entrenado, su descripción, y métricas."
-    file_format: "*.joblib"
