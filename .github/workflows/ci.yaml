@@ -1,0 +1,55 @@
+app:
+  name: "SpaceDuck's Linear Regression Tool"
+  version: "1.0"
+  description: "Herramienta para realizar análisis de regresión lineal con procesamiento de datos y predicciones."
+
+dependencies:
+  python: ">=3.8"
+  libraries:
+    - PySide6
+    - pandas
+    - sqlite3
+    - scikit-learn
+    - pyqtgraph
+    - joblib
+
+file_types:
+  supported:
+    - "*.csv"
+    - "*.xlsx"
+    - "*.xls"
+    - "*.db"
+    - "*.sqlite"
+    - "*.joblib"
+
+gui:
+  steps:
+    - name: "Carga de Datos"
+      description: "Selecciona un archivo de datos o carga un modelo existente."
+    - name: "Procesamiento de Datos"
+      description: "Selecciona columnas, maneja valores inexistentes y visualiza datos."
+    - name: "Entrenamiento del Modelo"
+      description: "Entrena un modelo de regresión lineal y muestra métricas."
+    - name: "Predicciones"
+      description: "Realiza predicciones con el modelo entrenado."
+  styles:
+    file: "style.qss"
+
+data_management:
+  strategies:
+    - "Eliminar filas"
+    - "Rellenar con media"
+    - "Rellenar con mediana"
+    - "Rellenar con valor constante"
+  save_format: "joblib"
+
+model:
+  type: "LinearRegression"
+  metrics:
+    - "R²"
+    - "ECM"
+
+outputs:
+  save:
+    model_description: "Archivo que incluye el modelo entrenado, su descripción, y métricas."
+    file_format: "*.joblib"

@@ -690,7 +690,8 @@ class MainWindow(ps.QMainWindow):
             self.predict_label.setText(f"{texto}: ")
             ps.QMessageBox.warning(self, "Error", "Debe ser un número")
 
-if __name__ == "__main__":
+
+def start():
     app = ps.QApplication(sys.argv)
     window = MainWindow()
     window.show()
