@@ -47,8 +47,7 @@ an accessible solution for data-driven tasks.
 
 - An integrated prediction tool.
 
-This readme documentation provides step-by-step guidance on how to
-install, navigate, and use the application effectively.
+
 
 # 2. Getting Started
 
