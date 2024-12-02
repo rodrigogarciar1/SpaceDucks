@@ -1,30 +1,32 @@
-name: CI Pipeline
+name: Python Unit Tests
 
 on:
   push:
     branches:
-      - main
+      - main  # Ejecutar las pruebas al hacer push a la rama "main"
   pull_request:
     branches:
-      - main
+      - main  # Ejecutar las pruebas al crear un pull request a la rama "main"
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Usar un sistema Ubuntu para ejecutar las pruebas
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3  # Clonar el repositorio
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.9'  # Especificar la versión de Python
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi  # Instalar dependencias si existen
 
     - name: Run tests
       run: |
-        python -m unittest discover -s tests
+        PYTHONPATH=src python -m unittest discover -s tests  # Establecer PYTHONPATH a src y ejecutar las pruebas
+
