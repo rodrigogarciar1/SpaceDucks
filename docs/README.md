@@ -23,18 +23,9 @@
 
 # 1. Introduction
 
-Welcome to the SpaceDuck linear regression application! This tool is
-designed to make data analysis accessible and intuitive for users of
-all experience levels. By leveraging linear regression, the
-application enables users to explore relationships between variables,
-build predictive models, and gain actionable insights from their data.
+Welcome to the SpaceDucks linear regression application! This tool makes data analysis accessible and intuitive all experience levels. By leveraging linear regression, the application enables users to explore relationships between variables, build predictive models, and gain insights from their data.
 
-This application simplifies the process of creating, visualizing,
-saving, and loading simple and multiple linear regression models.
-Users can work with data stored in various formats such as CSV, Excel,
-and SQLite, and perform tasks like data visualization and predictive
-analysis. The tool is ideal for novice users and professionals seeking
-an accessible solution for data-driven tasks.
+This application simplifies creating, visualizing, saving, and loading simple and multiple linear regression models. Users can work with data stored in various formats such as CSV, Excel, and SQLite, and perform tasks like data visualization and predictive analysis. The tool is ideal for novice users and professionals seeking an accessible solution for data-driven tasks.
 
  **Key features of the application include:**
 
@@ -73,7 +64,7 @@ for seamless functionality.
 | **Disc Space** | 2GB or Higher |
 | **Data Software** | CSV, Excel, or SQLite files (e.g., Microsoft Excel) |
 
-Table 2.1: Shows the minimum system requirements.
+Table 2.1: The minimum system requirements to use the application.
 
 ## 2.2 User Interface
 
@@ -105,7 +96,7 @@ to continue.
  <a href="https://ibb.co/bm9xCD8"><img src="https://i.ibb.co/H480b3k/image1.png" alt="image1" border="0"></a>
 
 
-Figure 2.1: Shows the main interface.
+Figure 2.1: The main interface of the application.
 
 # 3. Creating Linear Regression Models
 
@@ -173,7 +164,7 @@ predictions.
 <a href="https://ibb.co/5nCpwXQ"><img src="https://i.ibb.co/b2YwDj4/image3.png" alt="image3" border="0"></a>
 
 
-Figure 3.2: Shows the data to create models.
+Figure 3.2: The dataset and variables to create models.
 
 # 4. Linear Regression Models Visualization
 
@@ -198,7 +189,7 @@ graph to explore trends and patterns in greater detail.
 <a href="https://ibb.co/FVXXmJC"><img src="https://i.ibb.co/Srcc50G/image4.png" alt="image4" border="0"></a>
 
 
-Figure 4.1: Shows the Modelo section interface.
+Figure 4.1: The Model section interface.
 
 ## 4.2 Creating a Description
 
@@ -250,7 +241,7 @@ future values.
 <a href="https://imgbb.com/"><img src="https://i.ibb.co/vLK5zwq/image5.png" alt="image5" border="0"></a>
 
 
-Figure 5.1: Shows the settings to enable graph grids.
+Figure 5.1: The settings to enable graph grids.
 
 ## 5.2 Predicting Values
 
@@ -270,7 +261,7 @@ future values.
 
 <a href="https://ibb.co/N2k6KjP"><img src="https://i.ibb.co/TMnBt8S/image6.png" alt="image6" border="0"></a>
 
-Figure 5.2: Shows the interface for data predictions.
+Figure 5.2: The interface for data predictions.
 
 # 6. Saving and Loading Models
 
@@ -330,4 +321,4 @@ Definition of terms used throughout the applications.
 | Regression Model | A statistical method used to establish relationships between a dependent variable and one or more independent variables. |
 | Dataset | A structured collection of data used for analysis or training models, typically consisting of rows |
 
-Table 7.1: Shows the glossary of terms.
+Table 7.1: The glossary of terms used in the application.
