@@ -683,15 +683,3 @@ def start():
     window = MainWindow()
     window.show()
     app.exec()
-
-def fib2(n):
-    i, j = 1, 0
-    for _ in range(n):
-        j, i = i + j, j
-        print("------")
-        print(i)
-        print(j)
-        print("------")
-    print(j)
-
-fib2(10)
