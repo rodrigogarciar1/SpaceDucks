@@ -264,7 +264,6 @@ class MainWindow(ps.QMainWindow):
 
         self.setCentralWidget(central_widget)
 
-        
     def add_model(self):
         file_name, _ = ps.QFileDialog.getOpenFileName(self, "Open Model", filter="Accepted Files (*joblib)")
         if len(file_name)>0:
@@ -294,7 +293,6 @@ class MainWindow(ps.QMainWindow):
         self.next_step_button.setDisabled(True)
         self.next_step_button.setToolTip("Aplica los cambios antes de seguir")
         
-
     def apply_missing_data_strategy(self):
         strategy = self._missing_options.currentText()
         entry_column = self._entry_column.currentText()
@@ -313,10 +311,6 @@ class MainWindow(ps.QMainWindow):
             ps.QMessageBox.critical(self, "Error", f"Se produjo un error: {str(e)}")
             self.next_step_button.setDisabled(True)
             self.next_step_button.setToolTip("Aplica los cambios antes de seguir")
-
-            
-        
-        
 
     def add_file(self):
         self._graph.hide()
@@ -359,9 +353,6 @@ class MainWindow(ps.QMainWindow):
                 print("No se ha seleccionado ningún archivo.")
                 ps.QMessageBox.warning(self, "Error", "Por favor, selecciona un archivo primero.")
         
-
-
-    #eliminar las cosas de la caja de texto aunque no lo quita del todo tecnicamente, todavia lo tiene en memoria
     def clear_data(self):
         if not self._file_name:
             ps.QMessageBox.warning(self,"Error","No hay archivo seleccionado.")
@@ -474,8 +465,6 @@ class MainWindow(ps.QMainWindow):
         columna_salida = target_column
         self.plot_regression(columnas_entrada, columna_salida)
 
-
-
     def save_model(self):
         """Guarda el modelo junto con la descripción."""
         # Almacena la descripción del modelo
@@ -499,8 +488,7 @@ class MainWindow(ps.QMainWindow):
         else:
             self._current_step -= 1
             step = 1
-        self.change_step(self._steps[self._current_step + step], self._steps[self._current_step])
-        
+        self.change_step(self._steps[self._current_step + step], self._steps[self._current_step]) 
     
     def next_step(self):
         # Determine the next step based on the current state
@@ -690,10 +678,20 @@ class MainWindow(ps.QMainWindow):
             self.predict_label.setText(f"{texto}: ")
             ps.QMessageBox.warning(self, "Error", "Debe ser un número")
 
-
 def start():
     app = ps.QApplication(sys.argv)
     window = MainWindow()
     window.show()
     app.exec()
 
+def fib2(n):
+    i, j = 1, 0
+    for _ in range(n):
+        j, i = i + j, j
+        print("------")
+        print(i)
+        print(j)
+        print("------")
+    print(j)
+
+fib2(10)
