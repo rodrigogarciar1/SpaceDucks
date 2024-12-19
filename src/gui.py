@@ -1,7 +1,6 @@
 import sys
 import PySide6.QtWidgets as ps
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor #borrar esto proximamente
 from data_manager import DataManager, PandasModel # Importa el módulo data_manager correctamente
 from modelo import entrenar_modelo, hacer_predicciones
 import pyqtgraph as pg
