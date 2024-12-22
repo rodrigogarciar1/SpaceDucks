@@ -13,12 +13,14 @@
    - 4.1 [Visualizing Models](#41-visualizing-models)  
    - 4.2 [Creating a Description](#42-creating-a-description)  
 5. [Predicting Models and Values](#5-predicting-models-and-values)  
-   - 5.1 [Predicting Models](#51-predicting-models)  
-   - 5.2 [Predicting Values](#52-predicting-values)  
+   - 5.1 [Predicting Values](#52-predicting-values)  
 6. [Saving and Loading Models](#6-saving-and-loading-models)  
    - 6.1 [Saving Models](#61-saving-models)  
-   - 6.2 [Loading Models](#62-loading-models)  
-7. [Glossary](#7-glossary) 
+   - 6.2 [Loading Models](#62-loading-models)
+7. [Download and Execution Guide](#7-download-and-execution-guide)
+   - [7.1 Downloading the Latest Release](#71-downloading-the-latest-release)
+   - [7.2 Executing the Application](#72-executing-the-application)
+8. [Glossary](#8-glossary) 
 
 
 # 1. Introduction
@@ -221,29 +223,7 @@ scenarios. Whether you’re forecasting sales, analyzing trends, or
 predicting outcomes, the intuitive prediction feature ensures you can
 confidently derive actionable results.
 
-## 5.1 Predicting Models
-
-The model allows you to manipulate the graph view with the values of
-the regression model. This function helps you apply your model’s
-future values.
-
-**To predict using the model**
-
-1.  Select and hold (or right-click) on the generated model to open
-    menu.
-
-2.  Go to **Plot Options** \> **Grid**.
-
-3.  Select both **Show X Grid** and **Show Y Grid**
-
-    Grid lines will appear alongside the model.
-
-<a href="https://imgbb.com/"><img src="https://i.ibb.co/vLK5zwq/image5.png" alt="image5" border="0"></a>
-
-
-Figure 5.1: The settings to enable graph grids.
-
-## 5.2 Predicting Values
+## 5.1 Predicting Values
 
 The prediction tool allows you to input values and generate values
 based on your regression model. This step helps you apply your model’s
@@ -261,7 +241,7 @@ future values.
 
 <a href="https://ibb.co/N2k6KjP"><img src="https://i.ibb.co/TMnBt8S/image6.png" alt="image6" border="0"></a>
 
-Figure 5.2: The interface for data predictions.
+Figure 5.1: The interface for data predictions.
 
 # 6. Saving and Loading Models
 
@@ -309,8 +289,60 @@ rebuilding the model.
 
     File address will appear, and the model will load, refer to Figure
     3.1
+    
+# 7. Download and Execution Guide
 
-# 7. Glossary
+This section explains how to download the latest version of the application and execute it on your local system. Follow the steps below to set up and start using SpaceDucks efficiently.
+
+## 7.1 Downloading the Latest Release
+
+To ensure you have the latest features and updates, always download the most recent version of the application.
+
+**Steps to Download the Application**  
+1. **Visit the Repository**  
+   Go to the official SpaceDucks GitHub repository:  
+   [https://github.com/SpaceDucksApp](https://github.com/SpaceDucksApp).  
+
+2. **Locate the Latest Release**  
+   On the repository homepage, click on the **Releases** section or scroll down to find the latest release.  
+
+3. **Download the Source Code**    
+   To download the **source code**, click on the **Source Code (zip)** link.  
+
+4. **Save the File**  
+   Save the file in a location where you can easily access it, such as your desktop or a dedicated folder.  
+
+---
+
+## 7.2 Executing the Application
+
+After downloading, follow these steps to execute the application on your system.
+
+### For Source Code
+
+1. **Extract the Files**  
+   If you downloaded the source code as a `.zip` file, extract it using tools like WinRAR or the built-in archive manager.  
+
+2. **Install Dependencies**  
+   Open a terminal or command prompt in the extracted folder and run the following command to install the required libraries:  
+   ```bash
+   pip install -r requirements.txt
+   ```  
+
+3. **Run the Application**  
+   Execute the following command in the terminal to start the application:  
+   ```bash
+   python main.py
+   ```  
+
+4. **Start Using SpaceDucks**  
+   Once the application is running, the interface will open, and you can begin creating and visualizing linear regression models.  
+
+---
+
+By following these steps, you can download and start using SpaceDucks efficiently.
+
+# 8. Glossary
 
 Definition of terms used throughout the applications.
 
@@ -321,4 +353,4 @@ Definition of terms used throughout the applications.
 | Regression Model | A statistical method used to establish relationships between a dependent variable and one or more independent variables. |
 | Dataset | A structured collection of data used for analysis or training models, typically consisting of rows |
 
-Table 7.1: The glossary of terms used in the application.
+Table 8.1: The glossary of terms used in the application.
